@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#090d18" />
   <title>八十一难 · 西游魔塔</title>
   <link rel="preload" as="image" href="assets/journey-tower-keyart.png" />
-  <link rel="stylesheet" href="styles.css?v=1.2.0" />
+  <link rel="stylesheet" href="styles.css?v=1.3.0" />
 </head>
 <body>
   <main id="app">
@@ -22,7 +22,15 @@
         </div>
         <div class="key-hint"><kbd>WASD</kbd> / <kbd>方向键</kbd> 移动　<kbd>E</kbd> 交互　<kbd>Esc</kbd> 菜单</div>
       </div>
-      <div class="title-corner">长路漫漫<br />其修远兮</div>
+      <aside class="trial-catalog" aria-labelledby="trialCatalogTitle">
+        <header>
+          <div><small>JOURNEY INDEX</small><strong id="trialCatalogTitle">八十一难</strong></div>
+          <span>向下阅览</span>
+        </header>
+        <div id="trialCatalog" class="trial-catalog-scroll" tabindex="0" aria-label="八十一难关卡目录"></div>
+        <footer><i></i><span>九域 · 八十一难</span><i></i></footer>
+      </aside>
+      <div class="title-corner">踏上取经路，比抵达灵山更重要</div>
     </section>
 
     <section id="gameScreen" class="game-screen hidden" aria-label="西游魔塔游戏">
@@ -56,7 +64,8 @@
             <div class="key-slot blue"><span class="key-icon" style="--key-slot-art:url('assets/items/key-blue.png')"></span><small>蓝钥</small><b id="blueKey">0</b></div>
             <div class="key-slot red"><span class="key-icon" style="--key-slot-art:url('assets/items/key-red.png')"></span><small>红钥</small><b id="redKey">0</b></div>
           </div>
-          <div id="mirrorSlot" class="mirror-slot locked"><span class="mirror-icon" style="--mirror-art:url('assets/items/demon-mirror.png')"></span><small>照妖镜</small><b id="mirrorState">未得</b></div>
+          <div class="inventory-title artifact-title"><span>法宝栏</span><i></i><b id="artifactCount">0</b></div>
+          <div id="artifactBar" class="artifact-bar" aria-label="已获得法宝"></div>
           <button id="bestiaryBtn" class="panel-action">妖鉴 <span>查看本层敌情</span></button>
         </aside>
 
@@ -163,6 +172,6 @@
 
   <div id="toast" class="toast" aria-live="assertive"></div>
   <audio id="bgm" src="assets/audio/journey-tower-bgm.wav" preload="auto" loop></audio>
-  <script src="game.js?v=1.2.0"></script>
+  <script src="game.js?v=1.3.0"></script>
 </body>
 </html>

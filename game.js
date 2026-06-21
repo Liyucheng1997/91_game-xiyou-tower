@@ -5,15 +5,15 @@
   const TOTAL_FLOORS = 81;
   const SAVE_KEY = 'journey-tower-save-v2';
   const chapters = [
-    { name:'双叉岭', floors:'1—9', color:'#6d7d50', trials:['寅将军之劫','山野夜行','熊山君伏道','特处士拦关','双叉迷雾','荒祠妖火','猛虎巡山','岭上残月','寅将军决战'] },
-    { name:'黑风山', floors:'10—18', color:'#466a5c', trials:['观音禅院','锦斓袈裟','禅房烈火','黑风小径','熊罴守关','苍狼来袭','白花蛇阵','黑风洞府','黑熊精决战'] },
-    { name:'黄风岭', floors:'19—27', color:'#8a6c35', trials:['八百里黄风','虎先锋','风沙迷阵','定风珠影','山神指路','飞砂走石','黄风洞口','三昧神风','黄风怪决战'] },
-    { name:'流沙河', floors:'28—36', color:'#2f6f82', trials:['弱水三千','流沙渡口','红葫芦','九骷髅阵','水府暗流','卷帘旧将','渡河之策','水浪滔天','沙悟净试炼'] },
-    { name:'火云洞', floors:'37—45', color:'#9b3c2e', trials:['枯松涧','号山迷路','圣婴伏兵','三昧真火','假观音','火云洞门','五行战车','善财童子','红孩儿决战'] },
-    { name:'女儿国', floors:'46—54', color:'#88506d', trials:['西梁国界','子母河水','迎阳驿','女王邀约','蝎子精影','琵琶洞府','倒马毒桩','情关难破','蝎子精决战'] },
-    { name:'狮驼岭', floors:'55—63', color:'#5d4e41', trials:['八百里尸山','小钻风巡山','阴阳二气瓶','青狮张口','白象卷鼻','大鹏展翅','狮驼洞府','三魔会阵','金翅大鹏决战'] },
-    { name:'盘丝洞', floors:'64—72', color:'#684568', trials:['蛛丝小径','濯垢泉影','七情蛛阵','黄花观','百眼魔君','金光毒阵','毗蓝婆指路','千丝万缕','蜈蚣精决战'] },
-    { name:'灵山', floors:'73—81', color:'#8b6931', trials:['凌云渡','无底船','接引佛光','雷音寺门','五方揭谛','八部天龙','无字真经','最后心劫','如来佛祖'] }
+    { name:'双叉岭', floors:'1—9', color:'#6d7d50', trials:['云开双叉岭 · 石径入幽冥','松风惊夜客 · 残月照孤行','古镜沉熊穴 · 灵光照眼明','魔影横山径 · 金箍破夜冥','双峰藏雾锁 · 一棒问前程','荒祠燃鬼火 · 古木动秋声','虎啸穿云壑 · 石碑悟道生','岭月随人瘦 · 山风伴影清','寅威封古道 · 棒落万山平'] },
+    { name:'黑风山', floors:'10—18', color:'#466a5c', trials:['禅院钟初歇 · 松烟入夜深','巨灵临绝涧 · 神锋试道心','袈裟留旧火 · 故友赠丹心','黑风穿石径 · 暮雨洗尘襟','熊罴眠古坳 · 菩提入梦寻','松涛藏百怪 · 云影落幽林','洞门悬冷月 · 蛇影过疏林','九首翻沧浪 · 龙鳞照剑心','黑熊守佛衣 · 禅杖破云阴'] },
+    { name:'黄风岭', floors:'19—27', color:'#8a6c35', trials:['黄沙连落日 · 古道起长风','风径通荒驿 · 土祠隐老翁','沙阵迷千里 · 灵龟渡远空','珠影沉石罅 · 暗门听晚风','山神留鹤迹 · 野渡入晴空','飞沙遮望眼 · 星使下云宫','洞口悬金刃 · 秋声满碧空','三昧翻黄浪 · 定风镇远空','大圣呼狂飙 · 金睛破昏蒙'] },
+    { name:'流沙河', floors:'28—36', color:'#2f6f82', trials:['弱水涵星斗 · 古井卧苍龙','流沙横野渡 · 孤棹入烟重','河心浮旧月 · 故友护征蓬','枯骨鸣寒水 · 红尘渡几重','暗流穿水府 · 石隙隐蛟踪','水殿沉残鼓 · 蓝扉锁玉钟','一苇横天堑 · 禅心渡浪峰','沧浪翻夜雪 · 石上问禅宗','卷帘辞旧阙 · 宝杖定蛟龙'] },
+    { name:'火云洞', floors:'37—45', color:'#9b3c2e', trials:['枯松啼暮鸦 · 石罅隐丹霞','号山云路断 · 野火照归鸦','童影藏深壑 · 黄扉锁赤霞','真火烧禅念 · 土祠煮晚茶','慈容生幻相 · 心火乱昏花','洞门浮紫焰 · 菩提指落花','五车围火阵 · 铁轮碾暮霞','内殿悬丹鼎 · 炉烟绕绛纱','圣婴持火槊 · 龙影渡云霞'] },
+    { name:'女儿国', floors:'46—54', color:'#88506d', trials:['西梁春水暖 · 花雨落宫墙','子母河波静 · 石心藏暗香','驿路迎朝露 · 黄扉掩海棠','女王垂珠箔 · 灵龟问行藏','毒雾侵花径 · 土祠燃晚香','琵琶弹月冷 · 蓝扉锁红妆','倒马钩魂魄 · 石花隐暗香','情丝缠客梦 · 心定水云长','蝎尾摇寒月 · 金箍破毒光'] },
+    { name:'狮驼岭', floors:'55—63', color:'#5d4e41', trials:['尸岭连云暗 · 神锋照骨寒','巡山传夜柝 · 古井映星残','宝瓶收日月 · 黄扉锁玉关','狮吼崩云壁 · 风尘满故山','象步摇深谷 · 长廊落叶斑','鹏翼垂天际 · 八戒赠仙丹','魔窟连三界 · 阴风绕九关','三王遗石殿 · 石壁隐玄关','金翅遮天日 · 棒开万里山'] },
+    { name:'盘丝洞', floors:'64—72', color:'#684568', trials:['蛛丝牵古径 · 月冷照幽泉','垢泉浮花影 · 神刃断尘缘','七情织罗网 · 黄扉锁洞天','黄花凝晓露 · 石罅隐金蝉','百眼生毒雾 · 秋灯照暮烟','金光迷法眼 · 星使授真诠','金针穿雾阵 · 菩提落指尖','千丝缠皓月 · 一棒扫寒烟','魔眼开千日 · 毗蓝破毒天'] },
+    { name:'灵山', floors:'73—81', color:'#8b6931', trials:['凌云横法界 · 一苇渡金莲','无底舟无缆 · 心灯照彼岸','佛光开玉阙 · 黄扉锁梵天','雷音闻暮鼓 · 云路接诸天','五方垂法印 · 灵龟问夙缘','天龙盘宝座 · 悟净护经筵','无字藏真谛 · 心经写大千','心劫生莲火 · 土祠问宿缘','佛掌涵三界 · 猴心证大千'] }
   ];
 
   const enemyBook = [
@@ -65,6 +65,26 @@
     17:{sprite:'dragon',name:'九头妖王',icon:'九',hp:9800,atk:560,def:290,coin:520,color:'#58a49d',boss:true,elite:true,reward:{atk:55,def:42,hp:2600,red:2}}
   };
 
+  const artifactBook = {
+    'demon-mirror':{name:'照妖镜',art:'demon-mirror',skill:'洞察真形',detail:'开启妖鉴完整数值，战斗中看破妖怪气血。'},
+    'three-point-blade':{name:'三尖两刃刀',art:'three-point-blade',atk:16,skill:'破甲真锋',detail:'每层无视妖怪 4% 防御，最高 24%。'},
+    'nine-tooth-rake':{name:'九齿钉耙',art:'nine-tooth-rake',atk:20,hp:120,skill:'天蓬横扫',detail:'每层令开场横扫伤害提高，最高为一次普攻的 60%。'},
+    'kasaya':{name:'锦斓袈裟',art:'kasaya',def:17,hp:220,skill:'佛光护体',detail:'每层减免 4% 所受伤害，最高 24%。'},
+    'dragon-shield':{name:'白龙鳞盾',art:'dragon-shield',def:15,hp:280,skill:'龙鳞卸力',detail:'每层削弱妖怪 3% 攻击，最高 18%。'},
+    'chaos-armor':{name:'混世玄甲',art:'dragon-shield',skill:'玄甲镇岳',detail:'额外减免 8% 所受伤害。'},
+    'giant-edge':{name:'巨灵神锋',art:'three-point-blade',skill:'神锋裂阵',detail:'对劫主与首领额外造成 15% 伤害。'},
+    'nine-dragon-scale':{name:'九首龙鳞',art:'kasaya',skill:'九龙回护',detail:'削弱妖怪 8% 攻击。'},
+    'tiger-saber':{name:'虎魄偃月刀',art:'tiger-saber',skill:'虎魄斩将',detail:'对劫主与首领额外造成 20% 伤害。'},
+    'blackwind-kasaya':{name:'黑风锦斓袈裟',art:'blackwind-kasaya',skill:'黑风护心',detail:'额外减免 10% 所受伤害。'},
+    'wind-pearl':{name:'定风珠',art:'wind-pearl',skill:'定风止息',detail:'削弱妖怪 10% 攻击。'},
+    'demon-staff':{name:'降妖宝杖',art:'demon-staff',skill:'镇妖伏魔',detail:'对普通妖怪额外造成 18% 伤害。'},
+    'fire-spear':{name:'火尖枪',art:'fire-spear',skill:'真火灼魂',detail:'开场灼烧妖怪 8% 气血。'},
+    'scorpion-pipa':{name:'倒马毒琵琶',art:'scorpion-pipa',skill:'倒马奇毒',detail:'削弱妖怪 12% 攻击。'},
+    'twogas-vase':{name:'阴阳二气瓶',art:'twogas-vase',skill:'阴阳收摄',detail:'所有攻击额外造成 12% 伤害。'},
+    'golden-eye':{name:'金光宝眼',art:'golden-eye',skill:'洞虚金光',detail:'额外无视妖怪 12% 防御。'},
+    'lotus-scripture':{name:'莲台真经',art:'lotus-scripture',skill:'莲台不灭',detail:'额外减免 12% 所受伤害。'}
+  };
+
   const $ = s => document.querySelector(s);
   const npcArt = id => `assets/npcs/${id}.png`;
   const itemArt = id => `assets/items/${id}.png`;
@@ -83,7 +103,7 @@
 
   function freshState(){
     return {floor:1,pos:{x:1,y:9},hp:1000,maxHp:1000,atk:24,def:10,coin:0,level:1,exp:0,
-      keys:{yellow:0,blue:0,red:0},removed:{},companions:[],hasMirror:false,steps:0,startedAt:Date.now(),log:[],won:false};
+      keys:{yellow:0,blue:0,red:0},removed:{},companions:[],artifacts:{},hasMirror:false,steps:0,startedAt:Date.now(),log:[],won:false};
   }
 
   const expToNext=level=>20+level*8;
@@ -117,8 +137,8 @@
     const start=[1,9],exit=[9,1],visited=new Set([pointKey(...start)]),stack=[start];grid[start[1]][start[0]]='floor';
     while(stack.length){const [x,y]=stack[stack.length-1];const options=shuffle(directions.map(([dx,dy])=>[x+dx*2,y+dy*2,dx,dy]).filter(([nx,ny])=>inside(nx,ny)&&!visited.has(pointKey(nx,ny))));if(!options.length){stack.pop();continue}const [nx,ny,dx,dy]=options[0];grid[y+dy][x+dx]='floor';grid[ny][nx]='floor';visited.add(pointKey(nx,ny));stack.push([nx,ny])}
     grid[exit[1]][exit[0]]='floor';
-    const originalRoute=shortestPath(start,exit),desiredGateCount=1+(floor>=19?1:0)+(floor>=55?1:0);
-    const gateIndices=desiredGateCount===1?[.55]:desiredGateCount===2?[.38,.72]:[.28,.55,.78];
+    const originalRoute=shortestPath(start,exit),desiredGateCount=3;
+    const gateIndices=[.28,.55,.78];
     const mainGates=[];
     for(const ratio of gateIndices){const target=Math.floor((originalRoute.length-1)*ratio);let chosen=null;for(let offset=0;offset<originalRoute.length;offset++){for(const index of [target-offset,target+offset]){if(index<3||index>originalRoute.length-3)continue;const candidate=originalRoute[index],k=pointKey(...candidate);if(mainGates.some(g=>pointKey(...g)===k))continue;if(!shortestPath(start,exit,new Set([k]))){chosen=candidate;break}}if(chosen)break}if(chosen)mainGates.push(chosen)}
 
@@ -138,32 +158,41 @@
     addFixed(...exit,'stairs',{direction:'up'});if(floor>1)addFixed(...start,'stairs',{direction:'down'});
 
     const doorColors=['yellow','blue','red'];
-    mainGates.forEach((gate,index)=>addFixed(...gate,'door',{door:doorColors[(floor+index-1)%3],mainGate:true}));
-    mainGates.forEach((gate,index)=>{const blocked=new Set(mainGates.slice(index).map(g=>pointKey(...g)));if(vaultPlan)blocked.add(pointKey(...vaultPlan.door));const reachable=reachableFrom(start,blocked),candidates=floorCells().filter(([x,y])=>reachable.has(pointKey(x,y))&&!occupied.has(pointKey(x,y)));candidates.sort((a,b)=>{const score=p=>(floorNeighbors(...p).length===1?20:0)+(originalRoute.some(q=>pointKey(...q)===pointKey(...p))?0:10)+Math.abs(p[0]-gate[0])+Math.abs(p[1]-gate[1]);return score(b)-score(a)});const chosen=candidates[0]||start,kind=doorColors[(floor+index-1)%3];addFixed(...chosen,'item',{item:kind,name:`${doorName(kind)}钥匙`,gateKey:true})});
+    mainGates.forEach((gate,index)=>addFixed(...gate,'door',{door:doorColors[index],mainGate:true}));
+    mainGates.forEach((gate,index)=>{const blocked=new Set(mainGates.slice(index).map(g=>pointKey(...g)));if(vaultPlan)blocked.add(pointKey(...vaultPlan.door));const reachable=reachableFrom(start,blocked),candidates=floorCells().filter(([x,y])=>reachable.has(pointKey(x,y))&&!occupied.has(pointKey(x,y)));candidates.sort((a,b)=>{const score=p=>(floorNeighbors(...p).length===1?20:0)+(originalRoute.some(q=>pointKey(...q)===pointKey(...p))?0:10)+Math.abs(p[0]-gate[0])+Math.abs(p[1]-gate[1]);return score(b)-score(a)});const chosen=candidates[0]||start,kind=doorColors[index];addFixed(...chosen,'item',{item:kind,name:`${doorName(kind)}钥匙`,gateKey:true})});
 
     const tier=Math.min(enemyBook.length-1,Math.floor((floor-1)/7)),attackRelic=floor%10===0?'nine-tooth-rake':'three-point-blade',defenseRelic=floor%12===0?'kasaya':'dragon-shield';
     const bossRelicBook=[
-      {name:'虎魄偃月刀',art:'tiger-saber'},{name:'黑风锦斓袈裟',art:'blackwind-kasaya'},{name:'定风珠',art:'wind-pearl'},
-      {name:'降妖宝杖',art:'demon-staff'},{name:'火尖枪',art:'fire-spear'},{name:'倒马毒琵琶',art:'scorpion-pipa'},
-      {name:'阴阳二气瓶',art:'twogas-vase'},{name:'金光宝眼',art:'golden-eye'},{name:'莲台真经',art:'lotus-scripture'}
+      {id:'tiger-saber',name:'虎魄偃月刀',art:'tiger-saber'},{id:'blackwind-kasaya',name:'黑风锦斓袈裟',art:'blackwind-kasaya'},{id:'wind-pearl',name:'定风珠',art:'wind-pearl'},
+      {id:'demon-staff',name:'降妖宝杖',art:'demon-staff'},{id:'fire-spear',name:'火尖枪',art:'fire-spear'},{id:'scorpion-pipa',name:'倒马毒琵琶',art:'scorpion-pipa'},
+      {id:'twogas-vase',name:'阴阳二气瓶',art:'twogas-vase'},{id:'golden-eye',name:'金光宝眼',art:'golden-eye'},{id:'lotus-scripture',name:'莲台真经',art:'lotus-scripture'}
     ];
-    const routePool=originalRoute.slice(2,-2).filter(([x,y])=>!occupied.has(pointKey(x,y))),monsterCount=7+floor%4+Math.floor(floor/27);
+    const routeSet=new Set(originalRoute.map(([x,y])=>pointKey(x,y)));
+    const makeBossChamber=()=>{const candidates=shuffle(floorCells().filter(([x,y])=>!routeSet.has(pointKey(x,y))&&!occupied.has(pointKey(x,y))));for(const spot of candidates){const open=floorNeighbors(...spot).filter(([x,y])=>!occupied.has(pointKey(x,y))),walls=shuffle(directions.map(([dx,dy])=>[spot[0]+dx,spot[1]+dy]).filter(([x,y])=>inside(x,y)&&grid[y][x]==='wall'));if(!open.length||open.length+walls.length<3)continue;while(open.length<3&&walls.length){const carved=walls.shift();grid[carved[1]][carved[0]]='floor';open.push(carved)}return{boss:spot,entry:open[0],guard:open[1],relic:open[2]}}return null};
     const bossIndex=floor%9===0?floor/9-1:-1;
     if(bossIndex>=0){
-      const relic={...bossRelicBook[bossIndex],reward:{atk:14+bossIndex*5,def:9+bossIndex*4,hp:420+bossIndex*240}};
-      const bossCandidates=floorCells().filter(([x,y])=>!occupied.has(pointKey(x,y))&&floorNeighbors(x,y).filter(([nx,ny])=>!occupied.has(pointKey(nx,ny))).length>=3);
-      const bossSpot=place('enemy',{...bosses[bossIndex],boss:true,relic},1,bossCandidates)[0];
-      if(bossSpot){
-        const adjacent=floorNeighbors(...bossSpot).filter(([x,y])=>!occupied.has(pointKey(x,y)));
-        place('enemy',()=>({...enemyBook[Math.max(0,tier-1)],bossGuard:true}),2,adjacent);
-        const relicCell=floorNeighbors(...bossSpot).filter(([x,y])=>!occupied.has(pointKey(x,y)));
-        place('item',{item:'bossRelic',name:relic.name,art:relic.art,reward:relic.reward,sealedBy:`${floor}:${bossSpot[0]}:${bossSpot[1]}`},1,relicCell);
+      const relic={...bossRelicBook[bossIndex],reward:{atk:22+bossIndex*7,def:14+bossIndex*6,hp:650+bossIndex*320}};
+      const chamber=makeBossChamber();
+      if(chamber){
+        const seal=`${floor}:${chamber.boss[0]}:${chamber.boss[1]}`;
+        addFixed(...chamber.boss,'enemy',{...bosses[bossIndex],boss:true,bossChamber:true,relic});
+        addFixed(...chamber.entry,'enemy',{...enemyBook[Math.max(0,tier-1)],bossGuard:true});
+        addFixed(...chamber.guard,'enemy',{...enemyBook[Math.max(0,tier-1)],bossGuard:true});
+        addFixed(...chamber.relic,'item',{item:'bossRelic',artifactId:relic.id,name:relic.name,art:relic.art,reward:relic.reward,sealedBy:seal});
       }
     }
+    const elite=eliteBosses[floor];
+    if(elite){const eliteIndex=[4,11,17].indexOf(floor),eliteRelics=[{id:'chaos-armor',name:'混世玄甲',art:'dragon-shield'},{id:'giant-edge',name:'巨灵神锋',art:'three-point-blade'},{id:'nine-dragon-scale',name:'九首龙鳞',art:'kasaya'}],relic={...eliteRelics[eliteIndex],reward:{atk:14+eliteIndex*5,def:12+eliteIndex*4,hp:600+eliteIndex*260}},chamber=makeBossChamber();if(chamber){const seal=`${floor}:${chamber.boss[0]}:${chamber.boss[1]}`;addFixed(...chamber.boss,'enemy',{...elite,bossChamber:true,relic});addFixed(...chamber.entry,'enemy',{...enemyBook[Math.max(0,tier-1)],bossGuard:true});addFixed(...chamber.guard,'enemy',{...enemyBook[Math.max(0,tier-1)],bossGuard:true});addFixed(...chamber.relic,'item',{item:'bossRelic',artifactId:relic.id,name:relic.name,art:relic.art,reward:relic.reward,sealedBy:seal})}}
+    if(floor===3){
+      const routeSet=new Set(originalRoute.map(([x,y])=>pointKey(x,y)));
+      const mirrorBranches=shuffle(floorCells().filter(([x,y])=>!routeSet.has(pointKey(x,y))&&!occupied.has(pointKey(x,y))&&floorNeighbors(x,y).length===1));
+      const mirrorSpot=mirrorBranches.find(([x,y])=>floorNeighbors(x,y).some(([nx,ny])=>!occupied.has(pointKey(nx,ny))));
+      if(mirrorSpot){const guardSpot=floorNeighbors(...mirrorSpot).find(([x,y])=>!occupied.has(pointKey(x,y))),seal=`${floor}:${guardSpot[0]}:${guardSpot[1]}`;addFixed(...guardSpot,'enemy',{sprite:'bear',name:'镇镜熊罴',hp:380,atk:48,def:20,coin:55,color:'#80634c',mirrorGuardian:true});addFixed(...mirrorSpot,'item',{item:'mirror',art:'demon-mirror',name:'照妖镜',sealedBy:seal})}
+    }
+    const routePool=originalRoute.slice(2,-2).filter(([x,y])=>!occupied.has(pointKey(x,y))),monsterCount=7+floor%4+Math.floor(floor/27);
     place('enemy',()=>({...enemyBook[Math.max(0,tier-(r()<.28?1:0))]}),Math.min(4,monsterCount),routePool);
     place('enemy',()=>({...enemyBook[Math.max(0,tier-(r()<.28?1:0))]}),monsterCount-Math.min(4,monsterCount));
     place('item',{item:'potion',name:'大蟠桃'},1+(floor%4===0?1:0));
-    if(floor===3)place('item',{item:'mirror',art:'demon-mirror',name:'照妖镜'},1);
     if(floor%2===1)place('item',{item:'yellow',name:'黄钥匙'},1);
     if(floor%5===0)place('item',{item:'gemAtk',art:attackRelic,name:attackRelic==='nine-tooth-rake'?'九齿钉耙':'三尖两刃刀'},1);
     if(floor%6===0)place('item',{item:'gemDef',art:defenseRelic,name:defenseRelic==='kasaya'?'锦斓袈裟':'白龙鳞盾'},1);
@@ -174,13 +203,54 @@
     if(floor===81)place('npc',{npc:'tangseng',name:'唐僧',text:'悟空，最后一难不在塔外，在你心中。'},1);
     if(floor%5===2)place('secret',{name:'可疑石板',secret:floor%3},1);
     if(floor%7===0)place('adventure',{name:'未知奇遇',adventure:Math.floor(floor/7)%adventures.length},1);
-    const elite=eliteBosses[floor];if(elite){const branches=floorCells().filter(([x,y])=>!originalRoute.some(p=>pointKey(...p)===pointKey(x,y)));place('enemy',{...elite},1,branches)}
     if(vaultPlan){const kind=doorColors[(floor/3-1)%3];place('item',{item:kind,name:`${doorName(kind)}钥匙`,vaultKey:true},1);addFixed(...vaultPlan.door,'door',{door:kind,vault:true});addFixed(...vaultPlan.guard,'enemy',{...enemyBook[Math.min(enemyBook.length-1,tier)],vaultGuard:true});addFixed(...vaultPlan.reward,'item',floor%2?{item:'gemAtk',art:attackRelic,name:`秘藏·${attackRelic==='nine-tooth-rake'?'九齿钉耙':'三尖两刃刀'}`}:{item:'gemDef',art:defenseRelic,name:`秘藏·${defenseRelic==='kasaya'?'锦斓袈裟':'白龙鳞盾'}`})}
-    return {grid,entities,hasVault:!!vaultPlan,routeLength:originalRoute.length,loops};
+    return {grid,entities,hasVault:!!vaultPlan,routeLength:originalRoute.length,mainRoute:originalRoute,loops};
+  }
+
+  function getFloorMeta(floor){
+    const chapter=chapters[Math.floor((floor-1)/9)],baseTitle=chapter.trials[(floor-1)%9],bossIndex=floor%9===0?floor/9-1:-1;
+    if(bossIndex>=0)return{title:baseTitle,kind:'boss',badge:'BOSS'};
+    if(eliteBosses[floor])return{title:baseTitle,kind:'elite',badge:'劫主'};
+    if(floor===3)return{title:baseTitle,kind:'mirror',badge:'照妖镜'};
+    if(helpers[floor])return{title:baseTitle,kind:'helper',badge:'助阵'};
+    if(floor%7===0)return{title:baseTitle,kind:'adventure',badge:'奇遇'};
+    if(floor%10===0)return{title:baseTitle,kind:'shop',badge:'土地庙'};
+    if(floor%3===0&&floor<TOTAL_FLOORS)return{title:baseTitle,kind:'vault',badge:'秘藏'};
+    if(floor%5===2)return{title:baseTitle,kind:'secret',badge:'暗格'};
+    if(floor%5===0||floor%6===0)return{title:baseTitle,kind:'relic',badge:'法宝'};
+    return{title:baseTitle,kind:'journey',badge:'行路'};
+  }
+
+  function getFloorTitle(floor){return getFloorMeta(floor).title}
+
+  function previewFloorData(floor){
+    const previousState=state;state={floor,removed:{}};
+    try{return generateFloor(floor)}finally{state=previousState}
+  }
+
+  function showFloorPreview(floor){
+    const data=previewFloorData(floor),meta=getFloorMeta(floor),chapter=chapters[Math.floor((floor-1)/9)];
+    const entities=new Map(data.entities.map(e=>[`${e.x},${e.y}`,e]));
+    const glyph=e=>e.boss?'王':e.type==='enemy'?'妖':e.type==='door'?'门':e.type==='item'?'宝':e.type==='npc'?'友':e.type==='shop'?'祠':e.type==='adventure'?'缘':e.type==='secret'?'隐':e.type==='stairs'?'阶':'';
+    const cells=data.grid.flatMap((row,y)=>row.map((tile,x)=>{const e=entities.get(`${x},${y}`),kind=e?`entity-${e.type}${e.boss?' boss':''}${e.door?` door-${e.door}`:''}`:tile;return `<i class="preview-cell ${kind}" title="${e?.name||e?.type||tile}">${x===1&&y===9?'始':e?glyph(e):''}</i>`})).join('');
+    const enemies=data.entities.filter(e=>e.type==='enemy'),boss=enemies.find(e=>e.boss),helper=data.entities.find(e=>e.type==='npc'&&e.npc!=='tangseng'),adventure=data.entities.find(e=>e.type==='adventure'),vault=data.entities.find(e=>e.type==='door'&&e.vault);
+    const feature=boss?`此间强敌为${boss.name}，另有近卫守护法宝。`:floor===3?'熊罴镇守古镜，破阵后方可洞察群妖。':helper?`${helper.name}在此候你，或可赠予一程助力。`:adventure?`行至幽处，将遇「${adventures[adventure.adventure].title}」之缘。`:vault?`${doorName(vault.door)}门之后另藏机缘，钥匙取舍不可轻忽。`:meta.kind==='shop'?'土地古祠隐在岔路，可用功德换取修为。':meta.kind==='secret'?'石壁有异，细察或能寻得未载于图的暗格。':'此层门路交错，三色钥匙的次序决定去路。';
+    showModal(`<article class="floor-preview"><header><small>第 ${String(floor).padStart(2,'0')} 难 · ${chapter.name}</small><span class="catalog-badge">${meta.badge}</span></header><h2>${meta.title}</h2><div class="preview-layout"><div><div class="preview-board" aria-label="第 ${floor} 难地图缩略图">${cells}</div><div class="preview-legend"><span>始 起点</span><span>阶 云梯</span><span>妖 妖怪</span><span>宝 法宝</span></div></div><div class="preview-copy"><p>${feature}</p><dl><div><dt>妖怪</dt><dd>${enemies.length} 只</dd></div><div><dt>封门</dt><dd>${data.entities.filter(e=>e.type==='door').length} 道</dd></div><div><dt>路径</dt><dd>${data.routeLength} 格</dd></div><div><dt>回环</dt><dd>${data.loops} 处</dd></div></dl><small>仅供观阵，不会改变当前存档。</small></div></div></article>`);
+  }
+
+  function renderTrialCatalog(){
+    const root=$('#trialCatalog');if(!root)return;
+    let current=1;try{const saved=JSON.parse(localStorage.getItem(SAVE_KEY));if(saved?.floor)current=Math.max(1,Math.min(TOTAL_FLOORS,saved.floor))}catch{}
+    root.innerHTML=chapters.map((chapter,chapterIndex)=>{
+      const start=chapterIndex*9+1,items=chapter.trials.map((_,index)=>{const floor=start+index,meta=getFloorMeta(floor),progress=floor===current?' current':floor<current?' passed':'';return `<li><button type="button" data-preview-floor="${floor}" class="catalog-trial ${meta.kind}${progress}"${floor===current?' aria-current="step"':''} aria-label="预览第 ${floor} 难：${meta.title}"><span class="catalog-number">${String(floor).padStart(2,'0')}</span><span class="catalog-name" title="${meta.title}">${meta.title}</span><span class="catalog-badge">${meta.badge}</span></button></li>`}).join('');
+      return `<section class="catalog-chapter"><h2><b>${chapterIndex+1}</b>${chapter.name}<small>${chapter.floors}</small></h2><ol>${items}</ol></section>`;
+    }).join('');
+    root.querySelectorAll('[data-preview-floor]').forEach(button=>button.onclick=()=>showFloorPreview(Number(button.dataset.previewFloor)));
+    root.querySelector('[aria-current="step"]')?.scrollIntoView({block:'center'});
   }
 
   function render(){
-    const data=generateFloor(state.floor), chapter=chapters[Math.floor((state.floor-1)/9)], trial=chapter.trials[(state.floor-1)%9];
+    const data=generateFloor(state.floor), chapter=chapters[Math.floor((state.floor-1)/9)], trial=getFloorTitle(state.floor);
     ui.board.innerHTML='';
     for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
       const tile=document.createElement('div'); tile.className=`tile ${data.grid[y][x]}`;tile.dataset.x=x;tile.dataset.y=y;tile.setAttribute('role','gridcell');
@@ -193,7 +263,7 @@
     $('#chapterKicker').textContent=`第 ${Math.floor((state.floor-1)/9)+1} 难域 · ${chapter.floors} 难`;
     $('#hpStat').textContent=Math.floor(state.hp);$('#atkStat').textContent=state.atk;$('#defStat').textContent=state.def;$('#coinStat').textContent=state.coin;
     $('#heroLevel').textContent=state.level;$('#yellowKey').textContent=state.keys.yellow;$('#blueKey').textContent=state.keys.blue;$('#redKey').textContent=state.keys.red;
-    $('#mirrorState').textContent=state.hasMirror?'已得':'未得';$('#mirrorSlot').classList.toggle('locked',!state.hasMirror);
+    renderArtifacts();
     const neededExp=expToNext(state.level);$('#expText').textContent=`${state.exp||0} / ${neededExp}`;$('#expBar').style.width=`${Math.min(100,(state.exp||0)/neededExp*100)}%`;
     $('#floorProgressText').textContent=`${state.floor} / ${TOTAL_FLOORS}`;$('#floorProgressBar').style.width=`${state.floor/TOTAL_FLOORS*100}%`;
     const vaultDoor=data.entities.find(e=>e.type==='door'&&e.vault),mainGate=data.entities.find(e=>e.type==='door'&&e.mainGate),elite=data.entities.find(e=>e.elite);
@@ -205,7 +275,7 @@
 
   function renderEntity(e){
     const n=document.createElement('span');n.className=`entity ${e.type}`;n.dataset.type=e.type;
-    if(e.type==='enemy'){n.classList.add('game-sprite');if(e.elite)n.classList.add('elite-boss');if(e.boss&&!e.elite)n.classList.add('boss-unit');if(e.bossGuard)n.classList.add('boss-guard');n.style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);n.title=state.hasMirror?`${e.name} HP${e.hp} 攻${e.atk} 防${e.def}`:e.name;n.setAttribute('aria-label',n.title)}
+    if(e.type==='enemy'){n.classList.add('game-sprite');if(e.elite)n.classList.add('elite-boss');if(e.boss&&!e.elite)n.classList.add('boss-unit');if(e.bossGuard)n.classList.add('boss-guard');if(e.mirrorGuardian)n.classList.add('mirror-guardian');n.style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);n.title=state.hasMirror?`${e.name} HP${e.hp} 攻${e.atk} 防${e.def}`:e.name;n.setAttribute('aria-label',n.title)}
     if(e.type==='item'){
       n.classList.add(`item-${e.item}`,'ui-art','item-art');n.title=e.name;if(e.vaultKey)n.dataset.vaultKey='true';
       n.style.setProperty('--ui-art',`url("${itemArt(itemAsset(e))}")`);n.setAttribute('aria-label',e.name);
@@ -297,11 +367,30 @@
 
   function battle(e){void runBattle(e);return false}
 
+  const artifactCount=id=>state.artifacts?.[id]?.count||0;
+  function getBattleEffects(e){
+    const blade=artifactCount('three-point-blade'),rake=artifactCount('nine-tooth-rake'),kasaya=artifactCount('kasaya'),shield=artifactCount('dragon-shield');
+    const armorPierce=Math.min(.36,blade*.04+(artifactCount('golden-eye')?.12:0));
+    const enemyWeak=Math.min(.38,shield*.03+(artifactCount('nine-dragon-scale')?.08:0)+(artifactCount('wind-pearl')?.10:0)+(artifactCount('scorpion-pipa')?.12:0));
+    const reduction=Math.min(.5,kasaya*.04+(artifactCount('chaos-armor')?.08:0)+(artifactCount('blackwind-kasaya')?.10:0)+(artifactCount('lotus-scripture')?.12:0));
+    let damageBoost=artifactCount('twogas-vase')?.12:0;
+    if(e.boss)damageBoost+=(artifactCount('giant-edge')?.15:0)+(artifactCount('tiger-saber')?.20:0);
+    else damageBoost+=artifactCount('demon-staff')?.18:0;
+    const effectiveDef=Math.max(0,Math.floor(e.def*(1-armorPierce))),heroHit=Math.max(0,Math.floor(state.atk*(1+damageBoost))-effectiveDef);
+    const openingDamage=Math.min(e.hp-1,Math.floor(heroHit*Math.min(.6,rake*.1)+e.hp*(artifactCount('fire-spear')?.08:0)));
+    const enemyHit=Math.max(0,Math.floor(Math.max(0,e.atk*(1-enemyWeak)-state.def)*(1-reduction)));
+    const triggers=[];
+    if(armorPierce)triggers.push({name:'破甲真锋',text:`金光透甲，无视 ${Math.round(armorPierce*100)}% 防御。`});
+    if(openingDamage)triggers.push({name:artifactCount('fire-spear')?'真火横扫':'天蓬横扫',text:`法宝先发，开场造成 ${openingDamage} 伤害。`,damage:openingDamage});
+    if(damageBoost)triggers.push({name:'伏魔神威',text:`法宝共鸣，本战伤害提高 ${Math.round(damageBoost*100)}%。`});
+    if(enemyWeak||reduction)triggers.push({name:'护体神光',text:`妖力削弱 ${Math.round(enemyWeak*100)}%，所受伤害再减 ${Math.round(reduction*100)}%。`});
+    return{heroHit,enemyHit,openingDamage,effectiveDef,triggers};
+  }
+
   async function runBattle(e){
     if(busy)return false;
-    const heroHit=state.atk-e.def;
-    const rounds=heroHit>0?Math.ceil(e.hp/heroHit):Infinity;
-    const enemyHit=Math.max(0,e.atk-state.def);
+    const effects=getBattleEffects(e),{heroHit,enemyHit,openingDamage}=effects;
+    const rounds=heroHit>0?Math.ceil(Math.max(1,e.hp-openingDamage)/heroHit):Infinity;
     const loss=Number.isFinite(rounds)?Math.max(0,(rounds-1)*enemyHit):Infinity;
     openBattleScene(e);
     if(heroHit<=0){
@@ -313,14 +402,15 @@
 
     busy=true;
     const visualRounds=Math.min(rounds,6),startHeroHp=state.hp;
-    let completed=0,shownHeroHp=startHeroHp,shownEnemyHp=e.hp;
+    let completed=0,shownHeroHp=startHeroHp,shownEnemyHp=e.hp-openingDamage;
+    for(const trigger of effects.triggers){$('#battleScene').classList.add('artifact-skill');appendBattleLog(`法宝·${trigger.name}`,trigger.text,'artifact');if(trigger.damage){showDamage('#enemyDamage',trigger.damage);updateBattleHp('Enemy',shownEnemyHp,e.hp)}await wait(240);$('#battleScene').classList.remove('artifact-skill')}
     for(let i=0;i<visualRounds;i++){
       const nextCompleted=Math.max(completed+1,Math.round((i+1)*rounds/visualRounds));
       const attacks=nextCompleted-completed;
       const dealt=Math.min(shownEnemyHp,heroHit*attacks);
       $('#battleHeroWrap').classList.add('attacking');sound('battle');await wait(150);
       $('#battleHeroWrap').classList.remove('attacking');$('#battleEnemyWrap').classList.add('hit');showDamage('#enemyDamage',dealt);
-      shownEnemyHp=Math.max(0,e.hp-heroHit*nextCompleted);updateBattleHp('Enemy',shownEnemyHp,e.hp);
+      shownEnemyHp=Math.max(0,e.hp-openingDamage-heroHit*nextCompleted);updateBattleHp('Enemy',shownEnemyHp,e.hp);
       appendBattleLog(`第 ${nextCompleted} 回合`,attacks>1?`金箍棒连击 ×${attacks}，造成 ${dealt} 伤害。`:`悟空先攻，造成 ${dealt} 伤害。`,'hero');
       await wait(220);$('#battleEnemyWrap').classList.remove('hit');
       const countersBefore=Math.min(completed,rounds-1),countersNow=Math.min(nextCompleted,rounds-1),counters=countersNow-countersBefore;
@@ -350,7 +440,7 @@
 
   function openBattleScene(e){
     $('#battleScene').classList.remove('hidden');$('#battleKicker').textContent=`第 ${state.floor} 难 · 遭遇战`;
-    $('#battleEnemyName').textContent=e.name;$('#battleEnemyType').textContent=e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.vaultGuard?'藏宝室守卫':'拦路妖怪';
+    $('#battleEnemyName').textContent=e.name;$('#battleEnemyType').textContent=e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.mirrorGuardian?'照妖镜守护者':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪';
     $('#battleEnemySprite').style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);
     $('#battleHeroStats').textContent=`攻 ${state.atk}　防 ${state.def}`;$('#battleEnemyStats').textContent=state.hasMirror?`攻 ${e.atk}　防 ${e.def}`:'照妖镜未取得 · 数值不明';
     document.querySelector('.enemy-hp').classList.toggle('unknown',!state.hasMirror);$('#battleHeroMax').textContent=state.maxHp;$('#battleEnemyMax').textContent=state.hasMirror?e.hp:'?';updateBattleHp('Hero',state.hp,state.maxHp);updateBattleHp('Enemy',e.hp,e.hp);
@@ -369,13 +459,22 @@
   function showDamage(selector,value){const n=$(selector);n.textContent=typeof value==='number'?`-${value}`:value;n.classList.remove('pop');void n.offsetWidth;n.classList.add('pop')}
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
+  function registerArtifact(e){
+    state.artifacts=state.artifacts||{};
+    const id=e.artifactId||e.art||(e.item==='mirror'?'demon-mirror':null),definition=artifactBook[id]||{name:e.name,art:e.art,skill:'灵蕴加身',detail:'攻防与气血获得永久提升。'};
+    const owned=state.artifacts[id]||{id,count:0};owned.count++;state.artifacts[id]=owned;
+    const reward=e.reward||{atk:definition.atk||0,def:definition.def||0,hp:definition.hp||0};
+    owned.bonus=owned.bonus||{atk:0,def:0,hp:0};owned.bonus.atk+=reward.atk||0;owned.bonus.def+=reward.def||0;owned.bonus.hp+=reward.hp||0;
+    state.atk+=reward.atk||0;state.def+=reward.def||0;state.maxHp+=reward.hp||0;state.hp+=reward.hp||0;
+    return{id,definition,reward,count:owned.count};
+  }
+
   function collect(e){
     const scale=1+Math.floor(state.floor/12);
-    if(e.item==='mirror'){state.hasMirror=true;showGainEffect('mirror','照妖镜',`妖鉴已能洞察气血、攻击与防御`,'demon-mirror');addLog('神器','获得照妖镜，妖怪真形无所遁藏。','good')}
-    else if(e.item==='bossRelic'){const reward=e.reward||{};state.atk+=reward.atk||0;state.def+=reward.def||0;state.maxHp+=reward.hp||0;state.hp+=reward.hp||0;showGainEffect('relic',e.name,`攻击 +${reward.atk||0}　防御 +${reward.def||0}　气血 +${reward.hp||0}`,e.art);addLog('劫主法宝',`收服${e.name}，攻防与气血大幅提升。`,'good')}
+    if(e.item==='mirror'){state.hasMirror=true;registerArtifact({...e,artifactId:'demon-mirror'});showGainEffect('mirror','照妖镜',`洞察真形 · 妖鉴显示完整数值`,'demon-mirror');addLog('神器','获得照妖镜，已收入法宝栏。','good')}
+    else if(e.item==='bossRelic'){const gained=registerArtifact(e),reward=gained.reward;showGainEffect('relic',e.name,`${gained.definition.skill}　攻 +${reward.atk||0}　防 +${reward.def||0}　气血 +${reward.hp||0}`,e.art);addLog('劫主法宝',`收服${e.name}，获得技能「${gained.definition.skill}」。`,'good')}
     else if(e.item==='potion'){const gain=120*scale;state.hp+=gain;state.maxHp=Math.max(state.maxHp,state.hp);showGainEffect('peach','大蟠桃',`气血 +${gain}`,'peach');addLog('仙果',`蟠桃恢复 ${gain} 气血。`,'good')}
-    else if(e.item==='gemAtk'){const gain=7+Math.floor(state.floor/18)*2;state.atk+=gain;showGainEffect('attack',e.name,`攻击 +${gain}`,e.art);addLog('法宝',`${e.name}令攻击提升 ${gain}。`,'good')}
-    else if(e.item==='gemDef'){const gain=6+Math.floor(state.floor/18)*2;state.def+=gain;showGainEffect('defense',e.name,`防御 +${gain}`,e.art);addLog('法宝',`${e.name}令防御提升 ${gain}。`,'good')}
+    else if(e.item==='gemAtk'||e.item==='gemDef'){const gained=registerArtifact(e),reward=gained.reward;showGainEffect(e.item==='gemAtk'?'attack':'defense',gained.definition.name,`${gained.definition.skill} · 第 ${gained.count} 层　攻 +${reward.atk||0}　防 +${reward.def||0}　气血 +${reward.hp||0}`,e.art);addLog('法宝',`${gained.definition.name}收入法宝栏，「${gained.definition.skill}」叠至 ${gained.count} 层。`,'good')}
     else{state.keys[e.item]++;addLog('拾取',`获得一把${doorName(e.item)}钥匙。`,'good');showKeyNotice(e.item)}
   }
 
@@ -393,17 +492,30 @@
 
   function showBestiary(){
     const enemies=generateFloor(state.floor).entities.filter(e=>e.type==='enemy');
-    if(!state.hasMirror){const rows=enemies.length?enemies.map(e=>`<div class="monster-row obscured"><span class="mini-enemy game-sprite" style="--sprite:url('assets/sprites/${e.sprite}.png')"></span><div><b>${e.name}</b><small>${e.elite?'远古劫主':e.boss?'本层劫主':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪'}</small></div><span class="mirror-unknown">妖气遮蔽</span></div>`).join(''):'<p>本层妖气已清。</p>';showModal(`<h2>本层妖鉴</h2><div class="mirror-lock"><span class="ui-art item-art" style="--ui-art:url('${itemArt('demon-mirror')}')"></span><p>尚未取得照妖镜，只能辨认妖怪名号。照妖镜藏在第三难。</p></div>${rows}`);return}
-    const rows=enemies.length?enemies.map(e=>{const hit=state.atk-e.def,rounds=hit>0?Math.ceil(e.hp/hit):Infinity,loss=hit>0?Math.max(0,(rounds-1)*Math.max(0,e.atk-state.def)):Infinity;return `<div class="monster-row"><span class="mini-enemy game-sprite" style="--sprite:url('assets/sprites/${e.sprite}.png')"></span><div><b>${e.name}</b><small>${e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪'}</small></div><span><small>气血</small>${e.hp}</span><span><small>攻/防</small>${e.atk}/${e.def}</span><span><small>功德</small>${e.coin}</span><span class="loss"><small>预计损伤</small>${Number.isFinite(loss)?loss:'不可破防'}</span></div>`}).join(''):'<p>本层妖气已清。</p>';
+    if(!state.hasMirror){const rows=enemies.length?enemies.map(e=>`<div class="monster-row obscured"><span class="mini-enemy game-sprite" style="--sprite:url('assets/sprites/${e.sprite}.png')"></span><div><b>${e.name}</b><small>${e.elite?'远古劫主':e.boss?'本层劫主':e.mirrorGuardian?'照妖镜守护者':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪'}</small></div><span class="mirror-unknown">妖气遮蔽</span></div>`).join(''):'<p>本层妖气已清。</p>';showModal(`<h2>本层妖鉴</h2><div class="mirror-lock"><span class="ui-art item-art" style="--ui-art:url('${itemArt('demon-mirror')}')"></span><p>尚未取得照妖镜，只能辨认妖怪名号。照妖镜由第三难支路中的镇镜熊罴守护。</p></div>${rows}`);return}
+    const rows=enemies.length?enemies.map(e=>{const effects=getBattleEffects(e),hit=effects.heroHit,rounds=hit>0?Math.ceil(Math.max(1,e.hp-effects.openingDamage)/hit):Infinity,loss=hit>0?Math.max(0,(rounds-1)*effects.enemyHit):Infinity;return `<div class="monster-row"><span class="mini-enemy game-sprite" style="--sprite:url('assets/sprites/${e.sprite}.png')"></span><div><b>${e.name}</b><small>${e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.mirrorGuardian?'照妖镜守护者':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪'}</small></div><span><small>气血</small>${e.hp}</span><span><small>攻/防</small>${e.atk}/${e.def}</span><span><small>功德</small>${e.coin}</span><span class="loss"><small>法宝后损伤</small>${Number.isFinite(loss)?loss:'不可破防'}</span></div>`}).join(''):'<p>本层妖气已清。</p>';
     showModal(`<h2>本层妖鉴</h2><p>战斗自动结算。你先出手；敌人每轮反击，最后一击后不会反击。</p>${rows}`);
   }
 
-  function showMenu(){showModal(`<h2>行者歇脚</h2><p>进度已自动保存在浏览器中。当前第 ${state.floor} 难，已行 ${state.steps} 步。</p><div class="modal-actions"><button class="pixel-btn" data-action="resume">继续游戏</button><button class="pixel-btn" data-action="save">手动存档</button><button class="pixel-btn" data-action="title">返回标题</button><button class="pixel-btn" data-action="restart">重开此世</button></div>`);ui.modalContent.querySelector('[data-action=resume]').onclick=closeModal;ui.modalContent.querySelector('[data-action=save]').onclick=()=>{save();toast('前缘已记入天命卷');closeModal()};ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden');pauseBgm()};ui.modalContent.querySelector('[data-action=restart]').onclick=()=>{if(confirm('确定抹去当前进度，从第一难重新开始？'))startNew()}}
-  function showHelp(){showModal(`<h2>西行要诀</h2><p><b>移动：</b>使用 WASD、方向键或屏幕方向按钮。<br><b>照妖镜：</b>未取得前，妖鉴只能显示妖怪名称，战斗中也看不到敌方攻防和气血条。照妖镜藏在第三难。<br><b>战斗：</b>撞向妖怪会进入战斗场景。攻击必须高于妖怪防御；无法取胜时只能暂且退避。<br><b>劫主：</b>章节Boss由亲卫守护，身边法宝受妖气封印。击败Boss可获得更高属性奖励，并解除专属法宝封印。<br><b>路线：</b>每层由主路线、支路和少量回路组成。封印门位于关键通道，先探索门前区域、取得同色钥匙，再决定是否绕路取宝。<br><b>藏宝门：</b>每三层会出现一座可选藏宝室。钥匙必在门外，开门后仍需面对守卫才能取得秘宝。<br><b>探索：</b>留意地砖上极细的裂纹，也不要错过紫色星光。前者可能藏有宝物，后者会触发有选择的奇遇。<br><b>成长：</b>拾取法宝、蟠桃和钥匙，或在土地庙用功德换取能力。<br><b>存档：</b>每一步都会自动保存。</p>`)}
+  function showMenu(){showModal(`<h2>行者歇脚</h2><p>进度已自动保存在浏览器中。当前第 ${state.floor} 难，已行 ${state.steps} 步。</p><div class="modal-actions"><button class="pixel-btn" data-action="resume">继续游戏</button><button class="pixel-btn" data-action="save">手动存档</button><button class="pixel-btn" data-action="title">返回标题</button><button class="pixel-btn" data-action="restart">重开此世</button></div>`);ui.modalContent.querySelector('[data-action=resume]').onclick=closeModal;ui.modalContent.querySelector('[data-action=save]').onclick=()=>{save();toast('前缘已记入天命卷');closeModal()};ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden');pauseBgm();renderTrialCatalog()};ui.modalContent.querySelector('[data-action=restart]').onclick=()=>{if(confirm('确定抹去当前进度，从第一难重新开始？'))startNew()}}
+  function showHelp(){showModal(`<h2>西行要诀</h2><p><b>移动：</b>使用 WASD、方向键或屏幕方向按钮。<br><b>照妖镜：</b>未取得前，妖鉴只能显示妖怪名称，战斗中也看不到敌方攻防和气血条。照妖镜藏在第三难。<br><b>法宝栏：</b>获得的法宝会永久收入左侧法宝栏。重复获得可叠加层数，点击图标可查看属性和技能。<br><b>法宝技能：</b>破甲、横扫、佛光和龙鳞等技能会自动参与战斗，并在战斗记录中显示触发效果。<br><b>战斗：</b>撞向妖怪会进入战斗场景。攻击必须高于妖怪防御；无法取胜时只能暂且退避。<br><b>劫主：</b>章节Boss由亲卫守护，身边法宝受妖气封印。击败Boss可获得更高属性奖励，并解除专属法宝封印。<br><b>路线：</b>每层由主路线、支路和少量回路组成。封印门位于关键通道，先探索门前区域、取得同色钥匙，再决定是否绕路取宝。<br><b>藏宝门：</b>每三层会出现一座可选藏宝室。钥匙必在门外，开门后仍需面对守卫才能取得秘宝。<br><b>探索：</b>留意地砖上极细的裂纹，也不要错过紫色星光。前者可能藏有宝物，后者会触发有选择的奇遇。<br><b>存档：</b>每一步都会自动保存。</p>`)}
 
-  function winGame(){state.won=true;save();sound('win');const minutes=Math.max(1,Math.floor((Date.now()-state.startedAt)/60000));showModal(`<div class="ending-art"></div><h2>八十一难 · 功德圆满</h2><p>金箍棒停在佛掌之前。悟空终于明白，最后一战并非弑佛，而是打破心中最后的执念。如来让开雷音寺门，唐僧重获自由，师徒再踏归途。</p><p>通关记录：${state.steps} 步 · ${minutes} 分钟 · 剩余气血 ${Math.floor(state.hp)}</p><div class="modal-actions"><button class="pixel-btn primary" data-action="again">再历一世</button><button class="pixel-btn" data-action="title">返回标题</button></div>`);ui.modalContent.querySelector('[data-action=again]').onclick=startNew;ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden');pauseBgm()}}
+  function winGame(){state.won=true;save();sound('win');const minutes=Math.max(1,Math.floor((Date.now()-state.startedAt)/60000));showModal(`<div class="ending-art"></div><h2>八十一难 · 功德圆满</h2><p>金箍棒停在佛掌之前。悟空终于明白，最后一战并非弑佛，而是打破心中最后的执念。如来让开雷音寺门，唐僧重获自由，师徒再踏归途。</p><p>通关记录：${state.steps} 步 · ${minutes} 分钟 · 剩余气血 ${Math.floor(state.hp)}</p><div class="modal-actions"><button class="pixel-btn primary" data-action="again">再历一世</button><button class="pixel-btn" data-action="title">返回标题</button></div>`);ui.modalContent.querySelector('[data-action=again]').onclick=startNew;ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden');pauseBgm();renderTrialCatalog()}}
 
   function updateCompanions(){document.querySelectorAll('.companion').forEach(n=>{const active=state.companions.includes(n.dataset.id);n.classList.toggle('locked',!active);if(active)n.querySelector('small').textContent='已结缘 · 偶尔相助'})}
+  function renderArtifacts(){
+    const root=$('#artifactBar');if(!root)return;state.artifacts=state.artifacts||{};
+    const collected=Object.values(state.artifacts).filter(entry=>entry.count>0),mirrorOwned=!!state.artifacts['demon-mirror'];
+    const entries=[{id:'demon-mirror',count:mirrorOwned?state.artifacts['demon-mirror'].count:0,locked:!mirrorOwned},...collected.filter(entry=>entry.id!=='demon-mirror')];
+    const emptyCount=Math.max(0,6-entries.length),total=collected.reduce((sum,entry)=>sum+entry.count,0);$('#artifactCount').textContent=total;
+    root.innerHTML=entries.map(entry=>{const item=artifactBook[entry.id]||{name:entry.id,art:entry.id,skill:'未知灵蕴'},locked=entry.locked?' locked':'';return `<button class="artifact-slot${locked}" type="button" data-artifact="${entry.id}" title="${entry.locked?'尚未取得照妖镜':`${item.name} · ${item.skill}`}" ${entry.locked?'disabled':''}><i style="--artifact-art:url('${itemArt(item.art)}')"></i><span>${item.name}</span>${entry.count>1?`<b>×${entry.count}</b>`:''}</button>`}).join('')+Array.from({length:emptyCount},()=>'<span class="artifact-slot empty" aria-hidden="true"><i></i><span>未得</span></span>').join('');
+    root.querySelectorAll('[data-artifact]').forEach(button=>button.onclick=()=>showArtifactDetail(button.dataset.artifact));
+  }
+  function showArtifactDetail(id){
+    const item=artifactBook[id],entry=state.artifacts?.[id];if(!item||!entry)return;
+    const bonus=entry.bonus||{},stats=[bonus.atk?`攻击总计 +${bonus.atk}`:item.atk?`攻击 +${item.atk}/层`:'',bonus.def?`防御总计 +${bonus.def}`:item.def?`防御 +${item.def}/层`:'',bonus.hp?`气血总计 +${bonus.hp}`:item.hp?`气血 +${item.hp}/层`:''].filter(Boolean).join('　')||'特殊功能法宝';
+    showModal(`<div class="artifact-detail"><span class="artifact-detail-art" style="--artifact-art:url('${itemArt(item.art)}')"></span><div><small>已炼化 ${entry.count} 层</small><h2>${item.name}</h2><strong>${item.skill}</strong><p>${item.detail}</p><em>${stats}</em></div></div>`);
+  }
   function addLog(title,text,type=''){state.log.unshift({title,text,type});state.log=state.log.slice(0,20)}
   function renderLog(){ui.log.innerHTML=state.log.map(x=>`<div class="log-entry ${x.type}"><b>${x.title}</b> · ${x.text}</div>`).join('')||'<div class="log-entry">天命卷尚无记载。</div>'}
   function doorName(k){return{yellow:'黄',blue:'蓝',red:'红'}[k]}
@@ -426,7 +538,7 @@
   function load(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch{return null}}
   function enterGame(){ui.title.classList.add('hidden');ui.game.classList.remove('hidden');closeModal();$('#battleScene').classList.add('hidden');$('#itemEffect').classList.add('hidden');$('#floorTransition').classList.add('hidden');busy=false;render();syncBgm()}
   function startNew(){state=freshState();state.log=[{title:'启程',text:'悟空闯入八十一难塔，誓要救回唐僧。',type:'good'}];const bgm=$('#bgm');bgm.currentTime=0;bgmStarted=false;enterGame()}
-  function continueGame(){state=load();if(!state){startNew();return}if(typeof state.hasMirror!=='boolean')state.hasMirror=false;enterGame()}
+  function continueGame(){state=load();if(!state){startNew();return}if(typeof state.hasMirror!=='boolean')state.hasMirror=false;state.artifacts=state.artifacts||{};if(state.hasMirror&&!state.artifacts['demon-mirror'])state.artifacts['demon-mirror']={id:'demon-mirror',count:1};enterGame()}
 
   let audioCtx;
   function syncBgm(){
@@ -437,6 +549,7 @@
   function pauseBgm(){const bgm=$('#bgm');if(!bgm.paused)bgm.pause()}
   function sound(type){if(!audioOn)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();const freq={step:130,bump:80,item:620,door:210,stairs:440,battle:95,helper:520,win:740}[type]||220;o.type=type==='battle'?'sawtooth':'square';o.frequency.setValueAtTime(freq,audioCtx.currentTime);if(type==='win')o.frequency.exponentialRampToValueAtTime(1180,audioCtx.currentTime+.35);g.gain.setValueAtTime(.035,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+(type==='win'?.5:.09));o.connect(g).connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+(type==='win'?.5:.1))}catch{}}
 
+  renderTrialCatalog();
   $('#newGameBtn').onclick=startNew;$('#continueBtn').onclick=continueGame;$('#continueBtn').disabled=!localStorage.getItem(SAVE_KEY);
   $('#bestiaryBtn').onclick=showBestiary;$('#menuBtn').onclick=showMenu;$('#helpBtn').onclick=showHelp;
   $('#soundBtn').onclick=e=>{if(audioOn&&e.currentTarget.classList.contains('needs-gesture')){syncBgm();toast('正在开启背景音乐');return}audioOn=!audioOn;e.currentTarget.textContent=audioOn?'♪':'×';syncBgm();toast(audioOn?'背景音乐与音效已开启':'声音已关闭')};

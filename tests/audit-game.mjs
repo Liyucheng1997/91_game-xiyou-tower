@@ -14,11 +14,13 @@ function literal(name, next) {
   return Function(`return (${source.slice(start, end).trim().replace(/;$/, '')})`)();
 }
 
+const chapters = literal('chapters', 'enemyBook');
 const enemyBook = literal('enemyBook', 'bosses');
 const bosses = literal('bosses', 'helpers');
 const helpers = literal('helpers', 'adventures');
 const adventures = literal('adventures', 'eliteBosses');
-const eliteBosses = literal('eliteBosses', '$');
+const eliteBosses = literal('eliteBosses', 'artifactBook');
+const artifactBook = literal('artifactBook', '$');
 const rng = Function(`${source.slice(source.indexOf('function rng'), source.indexOf('const keyOf')).trim()}; return rng`)();
 let state = { floor: 1, removed: {} };
 const keyOf = (floor, x, y) => `${floor}:${x}:${y}`;
@@ -29,6 +31,15 @@ const generateFloor = Function(
   'SIZE', 'TOTAL_FLOORS', 'enemyBook', 'bosses', 'helpers', 'adventures', 'eliteBosses', 'rng', 'isRemoved', 'doorName',
   `${generatorSource}; return generateFloor`,
 )(SIZE, TOTAL_FLOORS, enemyBook, bosses, helpers, adventures, eliteBosses, rng, isRemoved, doorName);
+const floorTitleSource = source.slice(source.indexOf('function getFloorMeta'), source.indexOf('\n\n  function render()'));
+const floorTitleHelpers = Function(
+  'chapters', 'bosses', 'eliteBosses', 'helpers', 'adventures', 'TOTAL_FLOORS', 'doorName',
+  `${floorTitleSource}; return { getFloorTitle, getFloorMeta }`,
+)(chapters, bosses, eliteBosses, helpers, adventures, TOTAL_FLOORS, doorName);
+const { getFloorTitle, getFloorMeta } = floorTitleHelpers;
+const artifactState = { atk: 100, def: 30, artifacts: {} };
+const battleEffectSource = source.slice(source.indexOf('const artifactCount'), source.indexOf('\n  async function runBattle'));
+const getBattleEffects = Function('state', `${battleEffectSource}; return getBattleEffects`)(artifactState);
 
 function reachable(data, start, blockedEntities = new Set()) {
   const blocked = new Set(data.entities.filter(entity => blockedEntities.has(entity.type)).map(entity => `${entity.x},${entity.y}`));
@@ -87,20 +98,48 @@ function unlockReachable(data, start) {
 const failures = [];
 const tileRule = css.match(/\.tile\{([^}]*)\}/)?.[1] || '';
 if (!/overflow:hidden/.test(tileRule)) failures.push('地图格子没有裁切呼吸动画，图标可能越界');
+const itemArtRule = css.match(/\.item-art\{([^}]*)\}/)?.[1] || '';
+const itemArtWidth = Number(itemArtRule.match(/width:([\d.]+)%/)?.[1] || 100);
+if (itemArtWidth > 80) failures.push(`地图道具占格比例过大：${itemArtWidth}%`);
+if (!/\.enemy-hp\.unknown[^\n}]*[> ,]span[^\n}]*\{[^}]*display:none/.test(css)) failures.push('未取得照妖镜时战斗血条仍然可见');
 if (!source.includes('hasMirror:false')) failures.push('新游戏状态缺少照妖镜字段');
 if (!source.includes("if(!state.hasMirror)")) failures.push('妖鉴没有受照妖镜状态控制');
 if (!source.includes("side==='Enemy'&&!state.hasMirror")) failures.push('战斗血条没有受照妖镜状态控制');
 if (!/<audio[^>]+id="bgm"[^>]+loop/.test(html)) failures.push('背景音乐没有配置循环播放');
+if (!html.includes('id="trialCatalog"')) failures.push('入口缺少八十一难目录');
+if (!html.includes('踏上取经路，比抵达灵山更重要')) failures.push('入口右下角文案未更新');
+if (!source.includes('renderTrialCatalog();')) failures.push('八十一难目录没有初始化');
+if (!/\.trial-catalog-scroll\{[^}]*overflow-y:auto/.test(css)) failures.push('八十一难目录不能上下滚动');
+if (!source.includes('data-preview-floor')) failures.push('八十一难目录不能点击预览关卡');
+if (!source.includes('function showFloorPreview')) failures.push('缺少关卡预览功能');
+if (!html.includes('id="artifactBar"')) failures.push('角色面板缺少法宝栏');
+if (!source.includes('function renderArtifacts')) failures.push('法宝栏没有渲染收藏法宝');
+if (!source.includes('function registerArtifact')) failures.push('法宝拾取后没有进入收藏');
+if (!source.includes('artifacts:{}')) failures.push('新存档缺少法宝收藏字段');
+if (Object.keys(artifactBook).length < 17) failures.push(`法宝技能数量不足：${Object.keys(artifactBook).length}`);
+if (artifactBook['three-point-blade'].atk < 15 || artifactBook['nine-tooth-rake'].atk < 18) failures.push('攻击法宝基础属性仍然过低');
+if (artifactBook.kasaya.def < 15 || artifactBook['dragon-shield'].def < 14) failures.push('防御法宝基础属性仍然过低');
+if (!/\.battle-scene\.artifact-skill/.test(css) || !/\.battle-log-line\.artifact/.test(css)) failures.push('法宝技能缺少战斗特效');
+const effectEnemy = { hp: 1000, atk: 120, def: 60, boss: true };
+const baselineEffects = getBattleEffects(effectEnemy);
+artifactState.artifacts = {'three-point-blade':{count:3},'nine-tooth-rake':{count:2},kasaya:{count:2},'dragon-shield':{count:2},'tiger-saber':{count:1}};
+const artifactEffects = getBattleEffects(effectEnemy);
+if (artifactEffects.heroHit <= baselineEffects.heroHit) failures.push('攻击法宝没有提高实际战斗伤害');
+if (artifactEffects.openingDamage <= 0) failures.push('九齿钉耙没有触发开场技能');
+if (artifactEffects.enemyHit >= baselineEffects.enemyHit) failures.push('防御法宝没有降低实际战斗伤害');
+if (artifactEffects.triggers.length < 3) failures.push('法宝技能战斗触发信息不足');
 if (bgm.toString('ascii', 0, 4) !== 'RIFF' || bgm.toString('ascii', 8, 12) !== 'WAVE') failures.push('背景音乐不是有效 WAV 文件');
 const bgmRate = bgm.readUInt32LE(24), bgmChannels = bgm.readUInt16LE(22), bgmBits = bgm.readUInt16LE(34), bgmDataBytes = bgm.readUInt32LE(40);
 const bgmDuration = bgmDataBytes / (bgmRate * bgmChannels * (bgmBits / 8));
 if (Math.abs(bgmDuration - 180) > 0.01) failures.push(`背景音乐时长错误：${bgmDuration.toFixed(2)} 秒`);
 const doorRule = css.match(/\.entity\.door\{([^}]*)\}/)?.[1] || '';
 if (!/background:[^;}]*var\(--door(?:-dark)?\)/.test(doorRule)) failures.push('门板主体没有使用门色变量，三种门会显示成同一颜色');
+for (const color of ['yellow', 'blue', 'red']) if (!css.includes(`.entity.door.door-${color}`)) failures.push(`${color} 门颜色规则优先级不足`);
 let vaults = 0;
 let elites = 0;
 const seenDoorColors = new Set();
 let mirrors = 0;
+const floorTitles = [];
 const density = { minWalls: Infinity, maxWalls: 0, minEnemies: Infinity, maxEnemies: 0, minRoute: Infinity, maxRoute: 0 };
 for (let floor = 1; floor <= TOTAL_FLOORS; floor++) {
   state.floor = floor;
@@ -112,7 +151,36 @@ for (let floor = 1; floor <= TOTAL_FLOORS; floor++) {
   const innerWalls = data.grid.flat().filter(tile => tile === 'wall').length - 40;
   const normalEnemies = data.entities.filter(entity => entity.type === 'enemy' && !entity.elite).length;
   const mainGates = data.entities.filter(entity => entity.mainGate);
+  const mainGateColors = new Set(mainGates.map(entity => entity.door));
   const mirrorItems = data.entities.filter(entity => entity.item === 'mirror');
+  const floorTitle = getFloorTitle(floor);
+  const floorMeta = getFloorMeta(floor);
+  const titleBoss = data.entities.find(entity => entity.type === 'enemy' && entity.boss && !entity.elite);
+  const titleElite = data.entities.find(entity => entity.type === 'enemy' && entity.elite);
+  const titleMirror = data.entities.find(entity => entity.type === 'enemy' && entity.mirrorGuardian);
+  const titleHelper = data.entities.find(entity => entity.type === 'npc' && entity.npc !== 'tangseng');
+  const titleAdventure = data.entities.find(entity => entity.type === 'adventure');
+  const titleShop = data.entities.find(entity => entity.type === 'shop');
+  const titleVault = data.entities.find(entity => entity.type === 'door' && entity.vault);
+  const titleSecret = data.entities.find(entity => entity.type === 'secret');
+  floorTitles.push(floorTitle);
+  if (!floorTitle?.trim()) failures.push(`第 ${floor} 难缺少关卡名称`);
+  if (!/^[\p{Script=Han}]{5} · [\p{Script=Han}]{5}$/u.test(floorTitle)) failures.push(`第 ${floor} 难标题不是五字对句：${floorTitle}`);
+  if (titleBoss) {
+    if (floorMeta.kind !== 'boss') failures.push(`第 ${floor} 难没有标记 Boss ${titleBoss.name}`);
+  } else if (titleElite) {
+    if (floorMeta.kind !== 'elite') failures.push(`第 ${floor} 难没有标记远古劫主 ${titleElite.name}`);
+  } else if (titleMirror) {
+    if (floorMeta.kind !== 'mirror') failures.push(`第 ${floor} 难没有标记照妖镜`);
+  } else if (titleHelper) {
+    if (floorMeta.kind !== 'helper') failures.push(`第 ${floor} 难没有标记助阵 NPC ${titleHelper.name}`);
+  } else if (titleAdventure) {
+    if (floorMeta.kind !== 'adventure') failures.push(`第 ${floor} 难没有标记奇遇`);
+  } else if (titleShop) {
+    if (floorMeta.kind !== 'shop') failures.push(`第 ${floor} 难没有标记土地庙`);
+  } else if (titleVault) {
+    if (floorMeta.kind !== 'vault') failures.push(`第 ${floor} 难没有标记藏宝室`);
+  } else if (titleSecret && floorMeta.kind !== 'secret') failures.push(`第 ${floor} 难没有标记隐藏宝物`);
   mirrors += mirrorItems.length;
   density.minWalls = Math.min(density.minWalls, innerWalls); density.maxWalls = Math.max(density.maxWalls, innerWalls);
   density.minEnemies = Math.min(density.minEnemies, normalEnemies); density.maxEnemies = Math.max(density.maxEnemies, normalEnemies);
@@ -120,17 +188,25 @@ for (let floor = 1; floor <= TOTAL_FLOORS; floor++) {
   if (!up || !progression.seen.has(`${up.x},${up.y}`)) failures.push(`第 ${floor} 难无法按钥匙顺序到达上楼梯`);
   if (floor < TOTAL_FLOORS && innerWalls < 18) failures.push(`第 ${floor} 难内墙过少，仅 ${innerWalls} 格`);
   if (floor < TOTAL_FLOORS && normalEnemies < 7) failures.push(`第 ${floor} 难怪物密度过低，仅 ${normalEnemies} 只`);
-  const expectedGates = 1 + (floor >= 19 ? 1 : 0) + (floor >= 55 ? 1 : 0);
+  const expectedGates = 3;
   if (mainGates.length !== expectedGates) failures.push(`第 ${floor} 难主路线封印门数量错误：${mainGates.length}/${expectedGates}`);
+  if (mainGateColors.size !== 3) failures.push(`第 ${floor} 难没有同时出现黄、蓝、红三种主门`);
   if (data.routeLength < 15) failures.push(`第 ${floor} 难主路线过短：${data.routeLength} 格`);
   if (data.loops < 2) failures.push(`第 ${floor} 难缺少可选择的回路：${data.loops}`);
-  const boss = data.entities.find(entity => entity.boss && !entity.elite);
-  if (boss) {
+  for (const mirror of mirrorItems) {
+    const guardian = data.entities.find(entity => entity.mirrorGuardian && mirror.sealedBy === `${floor}:${entity.x}:${entity.y}`);
+    if (!guardian || guardian.hp < 300) failures.push(`第 ${floor} 难照妖镜缺少大型守护者`);
+  }
+  for (const boss of data.entities.filter(entity => entity.boss)) {
     const guards = data.entities.filter(entity => entity.bossGuard && Math.abs(entity.x - boss.x) + Math.abs(entity.y - boss.y) === 1);
     const relics = data.entities.filter(entity => entity.item === 'bossRelic' && entity.sealedBy === `${floor}:${boss.x}:${boss.y}`);
     if (guards.length < 2) failures.push(`第 ${floor} 难 Boss 身边守卫不足：${guards.length}`);
     if (!relics.length) failures.push(`第 ${floor} 难 Boss 身边没有封印法宝`);
-    if (relics.some(relic => !relic.reward || relic.reward.atk < 14 || relic.reward.def < 9 || relic.reward.hp < 420)) failures.push(`第 ${floor} 难 Boss 法宝奖励过低`);
+    if (relics.some(relic => !relic.artifactId || !artifactBook[relic.artifactId])) failures.push(`第 ${floor} 难 Boss 法宝没有进入法宝图鉴`);
+    if (!boss.bossChamber) failures.push(`第 ${floor} 难 Boss 仍然摆在主路上`);
+    if (data.mainRoute.some(([x, y]) => x === boss.x && y === boss.y)) failures.push(`第 ${floor} 难 Boss 坐标实际位于主路线`);
+    const minimum = boss.elite ? { atk: 7, def: 6, hp: 360 } : { atk: 14, def: 9, hp: 420 };
+    if (relics.some(relic => !relic.reward || relic.reward.atk < minimum.atk || relic.reward.def < minimum.def || relic.reward.hp < minimum.hp)) failures.push(`第 ${floor} 难 Boss 法宝奖励过低`);
   }
 
   for (const entity of data.entities) {
@@ -162,6 +238,7 @@ for (let floor = 1; floor <= TOTAL_FLOORS; floor++) {
 
 if (seenDoorColors.size !== 3) failures.push(`门色种类不足：${[...seenDoorColors].join('、')}`);
 if (mirrors !== 1) failures.push(`照妖镜数量错误：${mirrors}`);
+if (new Set(floorTitles).size !== TOTAL_FLOORS) failures.push(`81 难存在重复标题：${TOTAL_FLOORS - new Set(floorTitles).size} 个`);
 
 if (vaults !== 26) failures.push(`藏宝室数量错误：${vaults}`);
 if (elites !== 3) failures.push(`前期远古劫主数量错误：${elites}`);
@@ -231,4 +308,5 @@ if (failures.length) {
   console.error(failures.join('\n'));
   process.exit(1);
 }
+if (process.env.SHOW_FLOOR_TITLES === '1') floorTitles.forEach((title, index) => console.log(`${String(index + 1).padStart(2, '0')} · ${title}`));
 console.log(`81 层审计通过：${vaults} 座藏宝室、${elites} 位可绕行远古劫主；内墙 ${density.minWalls}–${density.maxWalls} 格，怪物 ${density.minEnemies}–${density.maxEnemies} 只，主路线 ${density.minRoute}–${density.maxRoute} 格；数值曲线通关等级 LV${hero.level}。`);
