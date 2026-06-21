@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d18" />
+  <title>八十一难 · 西游魔塔</title>
+  <link rel="preload" as="image" href="assets/journey-tower-keyart.png" />
+  <link rel="stylesheet" href="styles.css?v=1.0.0" />
+</head>
+<body>
+  <main id="app">
+    <section id="titleScreen" class="title-screen" aria-label="游戏开始界面">
+      <div class="title-vignette"></div>
+      <div class="title-copy">
+        <span class="eyebrow">像素策略冒险 · 81 层完整篇章</span>
+        <h1><i>八十一难</i><b>西游魔塔</b></h1>
+        <p>踏碎凌霄路，救回取经人。每一次战斗都不可逆。</p>
+        <div class="title-actions">
+          <button id="newGameBtn" class="pixel-btn primary">开始闯塔</button>
+          <button id="continueBtn" class="pixel-btn">继续前缘</button>
+        </div>
+        <div class="key-hint"><kbd>WASD</kbd> / <kbd>方向键</kbd> 移动　<kbd>E</kbd> 交互　<kbd>Esc</kbd> 菜单</div>
+      </div>
+      <div class="title-corner">长路漫漫<br />其修远兮</div>
+    </section>
+
+    <section id="gameScreen" class="game-screen hidden" aria-label="西游魔塔游戏">
+      <header class="topbar">
+        <div class="brand"><span class="brand-seal">难</span><div><small>JOURNEY TOWER</small><strong>八十一难</strong></div></div>
+        <div class="chapter-title"><small id="chapterKicker">第一难域</small><strong id="chapterName">双叉岭</strong></div>
+        <div class="top-actions">
+          <button class="icon-btn" id="soundBtn" aria-label="切换声音">♪</button>
+          <button class="icon-btn" id="helpBtn" aria-label="查看帮助">?</button>
+          <button class="icon-btn" id="menuBtn" aria-label="打开菜单">☰</button>
+        </div>
+      </header>
+
+      <div class="game-layout">
+        <aside class="hero-panel panel">
+          <div class="hero-portrait">
+            <div class="portrait-glow"></div><span class="game-sprite portrait-sprite" style="--sprite:url('assets/sprites/wukong.png')"></span>
+            <div class="level-badge">LV <b id="heroLevel">1</b></div>
+          </div>
+          <div class="hero-name"><small>齐天大圣</small><strong>孙悟空</strong></div>
+          <div class="cultivation"><span>修为 <b id="expText">0 / 25</b></span><div><i id="expBar"></i></div></div>
+          <div class="stat-list">
+            <div class="stat hp"><span>❤</span><label>气血</label><b id="hpStat">1000</b></div>
+            <div class="stat"><span>⚔</span><label>攻击</label><b id="atkStat">18</b></div>
+            <div class="stat"><span>◆</span><label>防御</label><b id="defStat">8</b></div>
+            <div class="stat"><span>◉</span><label>功德</label><b id="coinStat">0</b></div>
+          </div>
+          <div class="inventory-title"><span>行囊</span><i></i></div>
+          <div class="inventory">
+            <div class="key-slot yellow"><span class="key-icon">⚿</span><small>黄钥</small><b id="yellowKey">0</b></div>
+            <div class="key-slot blue"><span class="key-icon">⚿</span><small>蓝钥</small><b id="blueKey">0</b></div>
+            <div class="key-slot red"><span class="key-icon">⚿</span><small>红钥</small><b id="redKey">0</b></div>
+          </div>
+          <button id="bestiaryBtn" class="panel-action">妖鉴 <span>查看本层敌情</span></button>
+        </aside>
+
+        <section class="tower-stage">
+          <div class="floor-banner"><span>第</span><strong id="floorNumber">1</strong><span>难</span><em id="floorName">寅将军之劫</em></div>
+          <div class="board-shell">
+            <div class="board-backdrop"></div>
+            <div id="board" class="board" role="grid" aria-label="魔塔地图"></div>
+            <div class="board-shine"></div>
+          </div>
+          <div class="stage-footer">
+            <div class="objective"><small>当前目标</small><b id="objectiveText">寻找通往上层的云梯</b></div>
+            <div class="floor-progress"><span id="floorProgressText">1 / 81</span><div><i id="floorProgressBar"></i></div></div>
+          </div>
+        </section>
+
+        <aside class="journey-panel panel">
+          <div class="journey-heading"><small>西行录</small><strong>同伴与天命</strong></div>
+          <div class="companion-list" id="companionList">
+            <div class="companion locked" data-id="bajie"><span class="sprite sprite-bajie"></span><div><b>猪八戒</b><small>第 12 难相逢</small></div></div>
+            <div class="companion locked" data-id="shaseng"><span class="sprite sprite-shaseng"></span><div><b>沙悟净</b><small>第 30 难相逢</small></div></div>
+            <div class="companion locked" data-id="bailong"><span class="sprite sprite-bailong"></span><div><b>小白龙</b><small>第 45 难相逢</small></div></div>
+          </div>
+          <div class="log-heading"><span>天命卷</span><button id="clearLogBtn" aria-label="清空消息">×</button></div>
+          <div id="eventLog" class="event-log" aria-live="polite"></div>
+          <div class="oracle">
+            <span class="sprite sprite-taibai"></span>
+            <p id="oracleText">太白金星：大圣，算清损伤再动金箍棒，莽撞可过不了八十一难。</p>
+          </div>
+        </aside>
+      </div>
+
+      <nav class="mobile-controls" aria-label="移动控制">
+        <button data-dir="up" aria-label="向上">▲</button>
+        <button data-dir="left" aria-label="向左">◀</button>
+        <button data-dir="down" aria-label="向下">▼</button>
+        <button data-dir="right" aria-label="向右">▶</button>
+      </nav>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <button class="modal-close" data-close-modal aria-label="关闭">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <div id="battleScene" class="battle-scene hidden" role="dialog" aria-modal="true" aria-label="战斗场景">
+    <div class="battle-backdrop"></div>
+    <div class="battle-card">
+      <div class="battle-kicker" id="battleKicker">遭遇战</div>
+      <div class="battle-arena">
+        <section class="battle-fighter hero-side">
+          <div class="battle-name"><small>齐天大圣</small><strong>孙悟空</strong></div>
+          <div class="battle-sprite-wrap" id="battleHeroWrap">
+            <span class="game-sprite battle-sprite" style="--sprite:url('assets/sprites/wukong.png')"></span>
+            <i class="damage-float" id="heroDamage"></i>
+          </div>
+          <div class="battle-hp"><span><b id="battleHeroHp">0</b> / <em id="battleHeroMax">0</em></span><div><i id="battleHeroBar"></i></div></div>
+          <div class="battle-stats" id="battleHeroStats"></div>
+        </section>
+        <div class="battle-vs"><b>战</b><span>VS</span></div>
+        <section class="battle-fighter enemy-side">
+          <div class="battle-name"><small id="battleEnemyType">拦路妖怪</small><strong id="battleEnemyName">妖怪</strong></div>
+          <div class="battle-sprite-wrap" id="battleEnemyWrap">
+            <span id="battleEnemySprite" class="game-sprite battle-sprite"></span>
+            <i class="damage-float" id="enemyDamage"></i>
+          </div>
+          <div class="battle-hp enemy-hp"><span><b id="battleEnemyHp">0</b> / <em id="battleEnemyMax">0</em></span><div><i id="battleEnemyBar"></i></div></div>
+          <div class="battle-stats" id="battleEnemyStats"></div>
+        </section>
+      </div>
+      <div id="battleLog" class="battle-log" aria-live="polite"></div>
+      <div id="battleReward" class="battle-reward hidden"></div>
+      <button id="battleContinue" class="pixel-btn primary battle-continue hidden">收下奖励</button>
+    </div>
+  </div>
+
+  <div id="keyNotice" class="key-notice hidden" aria-live="assertive">
+    <div class="key-rays"></div>
+    <div class="key-card">
+      <small>获得道具</small>
+      <span class="big-key">⚿</span>
+      <strong id="keyNoticeName">黄钥匙</strong>
+      <p>当前持有 <b id="keyNoticeCount">1</b> 把</p>
+    </div>
+  </div>
+
+  <div id="itemEffect" class="item-effect hidden" aria-live="polite">
+    <div class="effect-burst"></div>
+    <div id="effectIcon" class="effect-icon"></div>
+    <strong id="effectTitle">气血恢复</strong>
+    <p id="effectDetail">气血 +120</p>
+  </div>
+
+  <div id="floorTransition" class="floor-transition hidden" aria-live="polite">
+    <div class="cloud cloud-a"></div><div class="cloud cloud-b"></div>
+    <div class="transition-stairs"><i></i><i></i><i></i><i></i><i></i></div>
+    <small id="transitionLabel">登临下一难</small>
+    <strong>第 <b id="transitionFloor">2</b> 难</strong>
+  </div>
+
+  <div id="toast" class="toast" aria-live="assertive"></div>
+  <script src="game.js?v=1.0.0"></script>
+</body>
+</html>
