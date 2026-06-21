@@ -43,13 +43,13 @@
   ];
 
   const helpers = {
-    12:{id:'bajie',name:'猪八戒',icon:'猪',text:'猴哥，老猪只帮这一回！九齿钉耙替你扫开些妖气。',reward:{atk:12,hp:220}},
-    24:{id:'taibai',name:'太白金星',icon:'星',text:'大圣，此处妖风厉害。这三把钥匙，收好了。',reward:{yellow:2,blue:1}},
-    30:{id:'shaseng',name:'沙悟净',icon:'沙',text:'大师兄，流沙河底炼得一身硬骨，分你三分护体罡气。',reward:{def:22,hp:350}},
-    45:{id:'bailong',name:'小白龙',icon:'龙',text:'大师兄，乘我破火云而去。龙鳞可护你周全。',reward:{def:32,red:1}},
-    60:{id:'bajie',name:'猪八戒',icon:'猪',text:'猴哥，前头三个魔王不好惹。这几颗仙桃你先吃。',reward:{hp:1000}},
-    69:{id:'taibai',name:'太白金星',icon:'星',text:'八十一难已近圆满，莫执着于一时胜负。金丹赠你。',reward:{atk:45,def:45,hp:1200}},
-    78:{id:'shaseng',name:'沙悟净',icon:'沙',text:'大师兄，师父就在前方。我们只能送你到这里。',reward:{atk:65,def:55,hp:1600}}
+    12:{id:'bajie',name:'猪八戒',text:'猴哥，老猪只帮这一回！九齿钉耙替你扫开些妖气。',reward:{atk:12,hp:220}},
+    24:{id:'taibai',name:'太白金星',text:'大圣，此处妖风厉害。这三把钥匙，收好了。',reward:{yellow:2,blue:1}},
+    30:{id:'shaseng',name:'沙悟净',text:'大师兄，流沙河底炼得一身硬骨，分你三分护体罡气。',reward:{def:22,hp:350}},
+    45:{id:'bailong',name:'小白龙',text:'大师兄，乘我破火云而去。龙鳞可护你周全。',reward:{def:32,red:1}},
+    60:{id:'bajie',name:'猪八戒',text:'猴哥，前头三个魔王不好惹。这几颗仙桃你先吃。',reward:{hp:1000}},
+    69:{id:'taibai',name:'太白金星',text:'八十一难已近圆满，莫执着于一时胜负。金丹赠你。',reward:{atk:45,def:45,hp:1200}},
+    78:{id:'shaseng',name:'沙悟净',text:'大师兄，师父就在前方。我们只能送你到这里。',reward:{atk:65,def:55,hp:1600}}
   };
 
   const adventures = [
@@ -66,6 +66,9 @@
   };
 
   const $ = s => document.querySelector(s);
+  const npcArt = id => `assets/npcs/${id}.png`;
+  const itemArt = id => `assets/items/${id}.png`;
+  const itemAsset = e => ({yellow:'key-yellow',blue:'key-blue',red:'key-red',potion:'peach'}[e.item]||e.art);
   const ui = {
     title:$('#titleScreen'), game:$('#gameScreen'), board:$('#board'), modal:$('#modal'), modalContent:$('#modalContent'),
     toast:$('#toast'), log:$('#eventLog'), oracle:$('#oracleText')
@@ -76,10 +79,11 @@
   let toastTimer;
   let keyNoticeTimer;
   let effectTimer;
+  let bgmStarted = false;
 
   function freshState(){
     return {floor:1,pos:{x:1,y:9},hp:1000,maxHp:1000,atk:24,def:10,coin:0,level:1,exp:0,
-      keys:{yellow:0,blue:0,red:0},removed:{},companions:[],steps:0,startedAt:Date.now(),log:[],won:false};
+      keys:{yellow:0,blue:0,red:0},removed:{},companions:[],hasMirror:false,steps:0,startedAt:Date.now(),log:[],won:false};
   }
 
   const expToNext=level=>20+level*8;
@@ -99,58 +103,80 @@
   const markRemoved=(x,y)=>state.removed[keyOf(state.floor,x,y)]=1;
 
   function generateFloor(floor){
-    const r=rng(floor*9187), grid=Array.from({length:SIZE},()=>Array(SIZE).fill('floor'));
-    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++) if(x===0||y===0||x===10||y===10) grid[y][x]='wall';
-    const safe=new Set(['1,9','2,9','9,1','8,1','1,8','9,2']);
-    const wallPatterns=[[[3,2],[3,3],[3,4],[7,6],[7,7],[7,8]],[[2,5],[3,5],[4,5],[6,5],[7,5],[8,5]],[[5,2],[5,3],[5,7],[5,8]],[[2,3],[3,3],[7,7],[8,7]]];
-    wallPatterns[floor%wallPatterns.length].forEach(([x,y])=>{if(!safe.has(`${x},${y}`))grid[y][x]='wall'});
-    const hasVault=floor%3===0&&floor<TOTAL_FLOORS;
-    if(hasVault){
-      for(let y=5;y<=9;y++)for(let x=6;x<=9;x++)grid[y][x]='floor';
-      for(let x=6;x<=9;x++)grid[5][x]='wall';
-      for(let y=5;y<=9;y++)grid[y][6]='wall';
-      grid[7][4]='floor';grid[7][5]='floor';grid[7][6]='floor';grid[6][7]='wall';grid[8][7]='wall';
-    }else if(floor%4===0){[[2,2],[8,8]].forEach(([x,y])=>grid[y][x]=floor%8===0?'lava':'water')}
+    const r=rng(floor*9187),grid=Array.from({length:SIZE},()=>Array(SIZE).fill('wall'));
+    const pointKey=(x,y)=>`${x},${y}`;
+    const shuffle=list=>{for(let i=list.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[list[i],list[j]]=[list[j],list[i]]}return list};
+    const inside=(x,y)=>x>0&&y>0&&x<SIZE-1&&y<SIZE-1;
+    const directions=[[1,0],[-1,0],[0,1],[0,-1]];
+    const floorNeighbors=(x,y)=>directions.map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>inside(nx,ny)&&grid[ny][nx]==='floor');
+    const floorCells=()=>{const cells=[];for(let y=1;y<SIZE-1;y++)for(let x=1;x<SIZE-1;x++)if(grid[y][x]==='floor')cells.push([x,y]);return cells};
+    const reachableFrom=(start,blocked=new Set())=>{const queue=[start],seen=new Set([pointKey(...start)]);while(queue.length){const [x,y]=queue.shift();for(const [nx,ny] of floorNeighbors(x,y)){const k=pointKey(nx,ny);if(!seen.has(k)&&!blocked.has(k)){seen.add(k);queue.push([nx,ny])}}}return seen};
+    const shortestPath=(start,goal,blocked=new Set())=>{const queue=[start],previous=new Map([[pointKey(...start),null]]);while(queue.length){const [x,y]=queue.shift(),k=pointKey(x,y);if(x===goal[0]&&y===goal[1]){const path=[];let cursor=k;while(cursor){path.unshift(cursor.split(',').map(Number));cursor=previous.get(cursor)}return path}for(const [nx,ny] of floorNeighbors(x,y)){const nk=pointKey(nx,ny);if(!previous.has(nk)&&!blocked.has(nk)){previous.set(nk,k);queue.push([nx,ny])}}}return null};
 
-    const entities=[];
+    // 以 5×5 节点生成完美迷宫，再有限度打通回路；比随机墙段更密集且始终有解。
+    const start=[1,9],exit=[9,1],visited=new Set([pointKey(...start)]),stack=[start];grid[start[1]][start[0]]='floor';
+    while(stack.length){const [x,y]=stack[stack.length-1];const options=shuffle(directions.map(([dx,dy])=>[x+dx*2,y+dy*2,dx,dy]).filter(([nx,ny])=>inside(nx,ny)&&!visited.has(pointKey(nx,ny))));if(!options.length){stack.pop();continue}const [nx,ny,dx,dy]=options[0];grid[y+dy][x+dx]='floor';grid[ny][nx]='floor';visited.add(pointKey(nx,ny));stack.push([nx,ny])}
+    grid[exit[1]][exit[0]]='floor';
+    const originalRoute=shortestPath(start,exit),desiredGateCount=1+(floor>=19?1:0)+(floor>=55?1:0);
+    const gateIndices=desiredGateCount===1?[.55]:desiredGateCount===2?[.38,.72]:[.28,.55,.78];
+    const mainGates=[];
+    for(const ratio of gateIndices){const target=Math.floor((originalRoute.length-1)*ratio);let chosen=null;for(let offset=0;offset<originalRoute.length;offset++){for(const index of [target-offset,target+offset]){if(index<3||index>originalRoute.length-3)continue;const candidate=originalRoute[index],k=pointKey(...candidate);if(mainGates.some(g=>pointKey(...g)===k))continue;if(!shortestPath(start,exit,new Set([k]))){chosen=candidate;break}}if(chosen)break}if(chosen)mainGates.push(chosen)}
+
+    const loopWalls=shuffle([]);for(let y=1;y<SIZE-1;y++)for(let x=1;x<SIZE-1;x++){if(grid[y][x]!=='wall')continue;const horizontal=grid[y][x-1]==='floor'&&grid[y][x+1]==='floor',vertical=grid[y-1][x]==='floor'&&grid[y+1][x]==='floor';if(horizontal||vertical)loopWalls.push([x,y])}
+    let loops=0;for(const [x,y] of loopWalls){if(loops>=2+floor%3)break;grid[y][x]='floor';const preservesGates=mainGates.every(g=>!shortestPath(start,exit,new Set([pointKey(...g)])));if(preservesGates)loops++;else grid[y][x]='wall'}
+
+    const hasVault=floor%3===0&&floor<TOTAL_FLOORS;
+    let vaultPlan=null;
+    if(hasVault){const routeSet=new Set(originalRoute.map(([x,y])=>pointKey(x,y)));const endpoints=shuffle(floorCells().filter(([x,y])=>floorNeighbors(x,y).length===1&&!routeSet.has(pointKey(x,y))));for(const [x,y] of endpoints){const wallOptions=shuffle(directions.map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>inside(nx,ny)&&grid[ny][nx]==='wall'));if(!wallOptions.length)continue;const [gx,gy]=wallOptions[0];grid[gy][gx]='floor';const rewardOptions=shuffle(directions.map(([dx,dy])=>[gx+dx,gy+dy]).filter(([nx,ny])=>inside(nx,ny)&&grid[ny][nx]==='wall'));if(!rewardOptions.length){grid[gy][gx]='wall';continue}const [rx,ry]=rewardOptions[0];grid[ry][rx]='floor';vaultPlan={door:[x,y],guard:[gx,gy],reward:[rx,ry]};break}}
+
+    const entities=[],occupied=new Set([pointKey(...start),pointKey(...exit)]);
+    if(vaultPlan)[vaultPlan.door,vaultPlan.guard,vaultPlan.reward].forEach(([x,y])=>occupied.add(pointKey(x,y)));
     const add=(x,y,type,data={})=>{if(!isRemoved(x,y))entities.push({x,y,type,...data})};
-    const occupied=new Set(['1,9','9,1']);
-    if(hasVault){for(let y=5;y<=9;y++)for(let x=6;x<=9;x++)occupied.add(`${x},${y}`);occupied.add('2,8')}
-    const elite=eliteBosses[floor];
-    if(elite){grid[1][1]='floor';grid[1][2]='floor';grid[2][1]='floor';occupied.add('1,1')}
-    const addFixed=(x,y,type,data={})=>{occupied.add(`${x},${y}`);add(x,y,type,data)};
-    addFixed(9,1,'stairs',{direction:'up'});
-    if(floor>1)addFixed(1,9,'stairs',{direction:'down'});
-    const place=(type,data,count=1)=>{
-      let guard=0;while(count>0&&guard++<300){const x=1+Math.floor(r()*9),y=1+Math.floor(r()*9),k=`${x},${y}`;if(grid[y][x]==='floor'&&!occupied.has(k)&&!safe.has(k)){occupied.add(k);add(x,y,type,typeof data==='function'?data():data);count--;}}
-    };
-    const tier=Math.min(enemyBook.length-1,Math.floor((floor-1)/7));
-    if(floor===81){
-      place('enemy',{...bosses[8],boss:true},1); addFixed(8,1,'npc',{npc:'tangseng',name:'唐僧',icon:'僧',text:'悟空，最后一难不在塔外，在你心中。'});
-    }else{
-      place('enemy',()=>({...enemyBook[Math.max(0,tier-(r()<.32?1:0))]}),3+floor%3);
-      if(floor%9===0) place('enemy',{...bosses[floor/9-1],boss:true},1);
-      place('item',{item:'potion',icon:'桃',name:'蟠桃'},1+(floor%4===0?1:0));
-      if(floor%2===1) place('item',{item:'yellow',icon:'⚿',name:'黄钥匙'},1);
-      if(floor%5===0) place('item',{item:'gemAtk',icon:'◆',name:'攻击宝石'},1);
-      if(floor%6===0) place('item',{item:'gemDef',icon:'◇',name:'防御宝石'},1);
-      if(floor%8===0) place('item',{item:'blue',icon:'⚿',name:'蓝钥匙'},1);
-      if(floor%18===0) place('item',{item:'red',icon:'⚿',name:'红钥匙'},1);
-      if(floor%10===0) place('shop',{icon:'鼎',name:'土地庙'},1);
-      if(helpers[floor]) place('npc',{...helpers[floor],npc:helpers[floor].id},1);
-      if(floor%5===2) place('secret',{name:'可疑石板',secret:floor%3},1);
-      if(floor%7===0) place('adventure',{name:'未知奇遇',adventure:Math.floor(floor/7)%adventures.length},1);
-      if(elite)addFixed(1,1,'enemy',{...elite});
-      if(hasVault){
-        const door=floor%9===0?'red':floor%6===0?'blue':'yellow';
-        addFixed(2,8,'item',{item:door,icon:'⚿',name:`${doorName(door)}钥匙`,vaultKey:true});
-        addFixed(6,7,'door',{door,vault:true});
-        addFixed(8,7,'enemy',{...enemyBook[Math.min(enemyBook.length-1,tier)],vaultGuard:true});
-        addFixed(9,6,'item',{item:floor%2?'gemAtk':'gemDef',icon:floor%2?'◆':'◇',name:floor%2?'秘藏攻击宝石':'秘藏防御宝石'});
-        addFixed(9,8,'item',{item:'potion',icon:'桃',name:'秘藏蟠桃'});
+    const addFixed=(x,y,type,data={})=>{occupied.add(pointKey(x,y));add(x,y,type,data)};
+    const freePool=preferred=>shuffle((preferred||floorCells()).filter(([x,y])=>!occupied.has(pointKey(x,y))));
+    const place=(type,data,count=1,preferred=null)=>{const placed=[];for(const [x,y] of freePool(preferred)){if(count<=0)break;occupied.add(pointKey(x,y));add(x,y,type,typeof data==='function'?data():data);placed.push([x,y]);count--}return placed};
+    addFixed(...exit,'stairs',{direction:'up'});if(floor>1)addFixed(...start,'stairs',{direction:'down'});
+
+    const doorColors=['yellow','blue','red'];
+    mainGates.forEach((gate,index)=>addFixed(...gate,'door',{door:doorColors[(floor+index-1)%3],mainGate:true}));
+    mainGates.forEach((gate,index)=>{const blocked=new Set(mainGates.slice(index).map(g=>pointKey(...g)));if(vaultPlan)blocked.add(pointKey(...vaultPlan.door));const reachable=reachableFrom(start,blocked),candidates=floorCells().filter(([x,y])=>reachable.has(pointKey(x,y))&&!occupied.has(pointKey(x,y)));candidates.sort((a,b)=>{const score=p=>(floorNeighbors(...p).length===1?20:0)+(originalRoute.some(q=>pointKey(...q)===pointKey(...p))?0:10)+Math.abs(p[0]-gate[0])+Math.abs(p[1]-gate[1]);return score(b)-score(a)});const chosen=candidates[0]||start,kind=doorColors[(floor+index-1)%3];addFixed(...chosen,'item',{item:kind,name:`${doorName(kind)}钥匙`,gateKey:true})});
+
+    const tier=Math.min(enemyBook.length-1,Math.floor((floor-1)/7)),attackRelic=floor%10===0?'nine-tooth-rake':'three-point-blade',defenseRelic=floor%12===0?'kasaya':'dragon-shield';
+    const bossRelicBook=[
+      {name:'虎魄偃月刀',art:'tiger-saber'},{name:'黑风锦斓袈裟',art:'blackwind-kasaya'},{name:'定风珠',art:'wind-pearl'},
+      {name:'降妖宝杖',art:'demon-staff'},{name:'火尖枪',art:'fire-spear'},{name:'倒马毒琵琶',art:'scorpion-pipa'},
+      {name:'阴阳二气瓶',art:'twogas-vase'},{name:'金光宝眼',art:'golden-eye'},{name:'莲台真经',art:'lotus-scripture'}
+    ];
+    const routePool=originalRoute.slice(2,-2).filter(([x,y])=>!occupied.has(pointKey(x,y))),monsterCount=7+floor%4+Math.floor(floor/27);
+    const bossIndex=floor%9===0?floor/9-1:-1;
+    if(bossIndex>=0){
+      const relic={...bossRelicBook[bossIndex],reward:{atk:14+bossIndex*5,def:9+bossIndex*4,hp:420+bossIndex*240}};
+      const bossCandidates=floorCells().filter(([x,y])=>!occupied.has(pointKey(x,y))&&floorNeighbors(x,y).filter(([nx,ny])=>!occupied.has(pointKey(nx,ny))).length>=3);
+      const bossSpot=place('enemy',{...bosses[bossIndex],boss:true,relic},1,bossCandidates)[0];
+      if(bossSpot){
+        const adjacent=floorNeighbors(...bossSpot).filter(([x,y])=>!occupied.has(pointKey(x,y)));
+        place('enemy',()=>({...enemyBook[Math.max(0,tier-1)],bossGuard:true}),2,adjacent);
+        const relicCell=floorNeighbors(...bossSpot).filter(([x,y])=>!occupied.has(pointKey(x,y)));
+        place('item',{item:'bossRelic',name:relic.name,art:relic.art,reward:relic.reward,sealedBy:`${floor}:${bossSpot[0]}:${bossSpot[1]}`},1,relicCell);
       }
     }
-    return {grid,entities,hasVault};
+    place('enemy',()=>({...enemyBook[Math.max(0,tier-(r()<.28?1:0))]}),Math.min(4,monsterCount),routePool);
+    place('enemy',()=>({...enemyBook[Math.max(0,tier-(r()<.28?1:0))]}),monsterCount-Math.min(4,monsterCount));
+    place('item',{item:'potion',name:'大蟠桃'},1+(floor%4===0?1:0));
+    if(floor===3)place('item',{item:'mirror',art:'demon-mirror',name:'照妖镜'},1);
+    if(floor%2===1)place('item',{item:'yellow',name:'黄钥匙'},1);
+    if(floor%5===0)place('item',{item:'gemAtk',art:attackRelic,name:attackRelic==='nine-tooth-rake'?'九齿钉耙':'三尖两刃刀'},1);
+    if(floor%6===0)place('item',{item:'gemDef',art:defenseRelic,name:defenseRelic==='kasaya'?'锦斓袈裟':'白龙鳞盾'},1);
+    if(floor%8===0)place('item',{item:'blue',name:'蓝钥匙'},1);
+    if(floor%18===0)place('item',{item:'red',name:'红钥匙'},1);
+    if(floor%10===0)place('shop',{npc:'landgod',name:'土地庙'},1);
+    if(helpers[floor])place('npc',{...helpers[floor],npc:helpers[floor].id},1);
+    if(floor===81)place('npc',{npc:'tangseng',name:'唐僧',text:'悟空，最后一难不在塔外，在你心中。'},1);
+    if(floor%5===2)place('secret',{name:'可疑石板',secret:floor%3},1);
+    if(floor%7===0)place('adventure',{name:'未知奇遇',adventure:Math.floor(floor/7)%adventures.length},1);
+    const elite=eliteBosses[floor];if(elite){const branches=floorCells().filter(([x,y])=>!originalRoute.some(p=>pointKey(...p)===pointKey(x,y)));place('enemy',{...elite},1,branches)}
+    if(vaultPlan){const kind=doorColors[(floor/3-1)%3];place('item',{item:kind,name:`${doorName(kind)}钥匙`,vaultKey:true},1);addFixed(...vaultPlan.door,'door',{door:kind,vault:true});addFixed(...vaultPlan.guard,'enemy',{...enemyBook[Math.min(enemyBook.length-1,tier)],vaultGuard:true});addFixed(...vaultPlan.reward,'item',floor%2?{item:'gemAtk',art:attackRelic,name:`秘藏·${attackRelic==='nine-tooth-rake'?'九齿钉耙':'三尖两刃刀'}`}:{item:'gemDef',art:defenseRelic,name:`秘藏·${defenseRelic==='kasaya'?'锦斓袈裟':'白龙鳞盾'}`})}
+    return {grid,entities,hasVault:!!vaultPlan,routeLength:originalRoute.length,loops};
   }
 
   function render(){
@@ -167,27 +193,27 @@
     $('#chapterKicker').textContent=`第 ${Math.floor((state.floor-1)/9)+1} 难域 · ${chapter.floors} 难`;
     $('#hpStat').textContent=Math.floor(state.hp);$('#atkStat').textContent=state.atk;$('#defStat').textContent=state.def;$('#coinStat').textContent=state.coin;
     $('#heroLevel').textContent=state.level;$('#yellowKey').textContent=state.keys.yellow;$('#blueKey').textContent=state.keys.blue;$('#redKey').textContent=state.keys.red;
+    $('#mirrorState').textContent=state.hasMirror?'已得':'未得';$('#mirrorSlot').classList.toggle('locked',!state.hasMirror);
     const neededExp=expToNext(state.level);$('#expText').textContent=`${state.exp||0} / ${neededExp}`;$('#expBar').style.width=`${Math.min(100,(state.exp||0)/neededExp*100)}%`;
     $('#floorProgressText').textContent=`${state.floor} / ${TOTAL_FLOORS}`;$('#floorProgressBar').style.width=`${state.floor/TOTAL_FLOORS*100}%`;
-    const vaultDoor=data.entities.find(e=>e.type==='door'&&e.vault),elite=data.entities.find(e=>e.elite);
-    $('#objectiveText').textContent=state.floor===81?'战胜如来，救回唐僧':elite?`${elite.name}暂不可敌，可绕行后再回来挑战`:vaultDoor?`找到${doorName(vaultDoor.door)}钥匙，开启藏宝门`:'寻找通往上层的云梯';
+    const vaultDoor=data.entities.find(e=>e.type==='door'&&e.vault),mainGate=data.entities.find(e=>e.type==='door'&&e.mainGate),elite=data.entities.find(e=>e.elite);
+    $('#objectiveText').textContent=state.floor===3&&!state.hasMirror?'探索支路，取得照妖镜':state.floor===81?'穿过封印，战胜如来':elite?`${elite.name}暂不可敌，可绕行后再回来挑战`:vaultDoor?`权衡路线：主门通关，${doorName(vaultDoor.door)}门藏有秘宝`:mainGate?`寻找${doorName(mainGate.door)}钥匙，破解本层路线`:'寻找通往上层的云梯';
+    $('#bestiaryBtn span').textContent=state.hasMirror?'照妖镜 · 洞察全貌':'未得照妖镜 · 仅可辨名';
     document.documentElement.style.setProperty('--chapter-color',chapter.color);
     updateCompanions();renderLog();save();
   }
 
   function renderEntity(e){
     const n=document.createElement('span');n.className=`entity ${e.type}`;n.dataset.type=e.type;
-    if(e.type==='enemy'){n.classList.add('game-sprite');if(e.elite)n.classList.add('elite-boss');n.style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);n.title=`${e.name} HP${e.hp} 攻${e.atk} 防${e.def}`;n.setAttribute('aria-label',n.title)}
+    if(e.type==='enemy'){n.classList.add('game-sprite');if(e.elite)n.classList.add('elite-boss');if(e.boss&&!e.elite)n.classList.add('boss-unit');if(e.bossGuard)n.classList.add('boss-guard');n.style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);n.title=state.hasMirror?`${e.name} HP${e.hp} 攻${e.atk} 防${e.def}`:e.name;n.setAttribute('aria-label',n.title)}
     if(e.type==='item'){
-      n.classList.add(`item-${e.item}`);n.title=e.name;if(e.vaultKey)n.dataset.vaultKey='true';
-      if(['yellow','blue','red'].includes(e.item)){n.classList.add('key-pickup');n.innerHTML='<i class="pickup-key"></i>'}
-      else if(e.item==='potion'){n.classList.add('peach-item');n.innerHTML='<i class="peach-fruit"><b></b></i>'}
-      else n.textContent=e.icon;
+      n.classList.add(`item-${e.item}`,'ui-art','item-art');n.title=e.name;if(e.vaultKey)n.dataset.vaultKey='true';
+      n.style.setProperty('--ui-art',`url("${itemArt(itemAsset(e))}")`);n.setAttribute('aria-label',e.name);
     }
     if(e.type==='door'){n.classList.add(`door-${e.door}`);n.title=`${doorName(e.door)}门 · 需要${doorName(e.door)}钥匙`;n.setAttribute('aria-label',n.title);if(e.vault)n.dataset.vault='true'}
     if(e.type==='stairs'){n.classList.add(`stairs-${e.direction}`);n.innerHTML='<i></i><i></i><i></i><i></i><i></i>';n.title=e.direction==='up'?'上楼 · 通往下一难':'下楼 · 返回上一难';n.setAttribute('aria-label',n.title)}
-    if(e.type==='npc'){n.textContent=e.icon;n.title=e.name}
-    if(e.type==='shop'){n.textContent=e.icon;n.title=e.name}
+    if(e.type==='npc'){n.classList.add('ui-art','npc-art');n.style.setProperty('--ui-art',`url("${npcArt(e.npc)}")`);n.title=e.name;n.setAttribute('aria-label',e.name)}
+    if(e.type==='shop'){n.classList.add('ui-art','npc-art','shop-art');n.style.setProperty('--ui-art',`url("${npcArt(e.npc||'landgod')}")`);n.title=e.name;n.setAttribute('aria-label',e.name)}
     if(e.type==='secret'){n.title='石板上似乎有一道细微裂纹';n.setAttribute('aria-label','可疑石板')}
     if(e.type==='adventure'){n.textContent='✦';n.title='未知奇遇'}
     return n;
@@ -207,7 +233,7 @@
   function interact(e){
     if(e.type==='enemy')return battle(e);
     if(e.type==='door')return openDoor(e);
-    if(e.type==='item'){collect(e);markRemoved(e.x,e.y);sound('item');return true}
+    if(e.type==='item'){if(e.sealedBy&&!state.removed[e.sealedBy]){toast(`${e.name}仍被劫主妖气封印`);sound('bump');return false}collect(e);markRemoved(e.x,e.y);sound('item');return true}
     if(e.type==='stairs'){
       if(e.direction==='up'&&state.floor===81){const finalAlive=generateFloor(81).entities.some(x=>x.type==='enemy');if(finalAlive){toast('如来仍守在雷音寺前');return false}winGame();return false}
       startFloorTransition(e.direction);return false;
@@ -279,10 +305,10 @@
     const loss=Number.isFinite(rounds)?Math.max(0,(rounds-1)*enemyHit):Infinity;
     openBattleScene(e);
     if(heroHit<=0){
-      busy=true;showBattleBlocked(`金箍棒无法破开 ${e.def} 点防御`,`${e.name} 的防御高于你的攻击。先寻找攻击宝石，再回来挑战。`);return false;
+      busy=true;showBattleBlocked(state.hasMirror?`金箍棒无法破开 ${e.def} 点防御`:'妖气护体，暂时无法破防',state.hasMirror?`${e.name} 的防御高于你的攻击。先寻找攻击法宝，再回来挑战。`:'未得照妖镜，无法判断具体防御。先提升攻击后再试。');return false;
     }
     if(loss>=state.hp){
-      busy=true;showBattleBlocked(`预计损失 ${loss} 气血`,`此战会令悟空倒下。提升防御或补充气血后再战。`);addLog('危机',`${e.name}不可强攻，预计损失 ${loss} 气血。`,'danger');return false;
+      busy=true;showBattleBlocked(state.hasMirror?`预计损失 ${loss} 气血`:'镜中妖气翻涌，此战必败',state.hasMirror?'此战会令悟空倒下。提升防御或补充气血后再战。':'先取得照妖镜或继续提升修为，再回来挑战。');addLog('危机',state.hasMirror?`${e.name}不可强攻，预计损失 ${loss} 气血。`:`${e.name}妖气过盛，当前不可强攻。`,'danger');return false;
     }
 
     busy=true;
@@ -308,17 +334,17 @@
     }
 
     const bonus=e.elite?e.reward||{}:{};
-    const atkGain=e.elite?(bonus.atk||0):e.boss?4+Math.floor(state.floor/9)*2:0;
-    const defGain=e.elite?(bonus.def||0):e.boss?3+Math.floor(state.floor/12):0;
+    const atkGain=e.elite?(bonus.atk||0):e.boss?10+Math.floor(state.floor/9)*3:0;
+    const defGain=e.elite?(bonus.def||0):e.boss?7+Math.floor(state.floor/9)*2:0;
     const hpGain=bonus.hp||0,redGain=bonus.red||0;
     const xpGain=e.elite?60+state.floor*4:e.boss?18+state.floor*2:5+Math.ceil(state.floor/4);
     state.hp-=loss;state.coin+=e.coin;state.atk+=atkGain;state.def+=defGain;state.maxHp+=hpGain;state.hp+=hpGain;state.keys.red+=redGain;
     const progress=gainExperience(xpGain);markRemoved(e.x,e.y);
     addLog('胜战',`击败${e.name}，损失 ${loss} 气血，获得 ${e.coin} 功德。`,loss>state.maxHp*.18?'danger':'good');save();
     $('#battleKicker').textContent=e.elite?'远古劫主已伏':e.boss?'大难已破':'战斗胜利';
-    $('#battleReward').innerHTML=`<strong>胜利奖励</strong><div><span>功德 <b>+${e.coin}</b></span><span>修为 <b>+${xpGain}</b></span><span>战斗损伤 <b>-${loss}</b></span>${e.boss?`<span>攻击 <b>+${atkGain}</b></span><span>防御 <b>+${defGain}</b></span>`:''}${hpGain?`<span>气血上限 <b>+${hpGain}</b></span>`:''}${redGain?`<span>红钥匙 <b>+${redGain}</b></span>`:''}${progress.levels?`<span>等级 <b>+${progress.levels}</b></span>`:''}</div>`;
+    $('#battleReward').innerHTML=`<strong>胜利奖励</strong>${e.relic?`<div class="boss-relic-preview"><i style="--relic-art:url('${itemArt(e.relic.art)}')"></i><span>封印解除<br><b>${e.relic.name}</b>可拾取</span></div>`:''}<div><span>功德 <b>+${e.coin}</b></span><span>修为 <b>+${xpGain}</b></span><span>战斗损伤 <b>-${loss}</b></span>${e.boss?`<span>攻击 <b>+${atkGain}</b></span><span>防御 <b>+${defGain}</b></span>`:''}${hpGain?`<span>气血上限 <b>+${hpGain}</b></span>`:''}${redGain?`<span>红钥匙 <b>+${redGain}</b></span>`:''}${progress.levels?`<span>等级 <b>+${progress.levels}</b></span>`:''}</div>`;
     $('#battleReward').classList.remove('hidden');
-    const done=$('#battleContinue');done.textContent=e.boss?'破劫前行':'收下奖励';done.classList.remove('hidden');done.onclick=()=>{closeBattleScene();state.pos={x:e.x,y:e.y};state.steps++;busy=false;render();if(redGain)showKeyNotice('red');if(progress.levels)setTimeout(()=>showGainEffect('level','修为提升',`等级提升至 LV ${state.level}`),redGain?450:0)};
+    const done=$('#battleContinue');done.textContent=e.boss?'击破封印 · 收取法宝':'收下奖励';done.classList.remove('hidden');done.onclick=()=>{closeBattleScene();state.pos={x:e.x,y:e.y};state.steps++;busy=false;render();if(redGain)showKeyNotice('red');if(progress.levels)setTimeout(()=>showGainEffect('level','修为提升',`等级提升至 LV ${state.level}`),redGain?450:0)};
     return false;
   }
 
@@ -326,8 +352,8 @@
     $('#battleScene').classList.remove('hidden');$('#battleKicker').textContent=`第 ${state.floor} 难 · 遭遇战`;
     $('#battleEnemyName').textContent=e.name;$('#battleEnemyType').textContent=e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.vaultGuard?'藏宝室守卫':'拦路妖怪';
     $('#battleEnemySprite').style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);
-    $('#battleHeroStats').textContent=`攻 ${state.atk}　防 ${state.def}`;$('#battleEnemyStats').textContent=`攻 ${e.atk}　防 ${e.def}`;
-    $('#battleHeroMax').textContent=state.maxHp;$('#battleEnemyMax').textContent=e.hp;updateBattleHp('Hero',state.hp,state.maxHp);updateBattleHp('Enemy',e.hp,e.hp);
+    $('#battleHeroStats').textContent=`攻 ${state.atk}　防 ${state.def}`;$('#battleEnemyStats').textContent=state.hasMirror?`攻 ${e.atk}　防 ${e.def}`:'照妖镜未取得 · 数值不明';
+    document.querySelector('.enemy-hp').classList.toggle('unknown',!state.hasMirror);$('#battleHeroMax').textContent=state.maxHp;$('#battleEnemyMax').textContent=state.hasMirror?e.hp:'?';updateBattleHp('Hero',state.hp,state.maxHp);updateBattleHp('Enemy',e.hp,e.hp);
     $('#battleLog').innerHTML='<div class="battle-log-line"><b>交锋</b><span>悟空与妖怪狭路相逢。</span></div>';
     $('#battleReward').classList.add('hidden');$('#battleReward').innerHTML='';$('#battleContinue').classList.add('hidden');
   }
@@ -338,16 +364,18 @@
   }
 
   function closeBattleScene(){$('#battleScene').classList.add('hidden');$('#battleHeroWrap').className='battle-sprite-wrap';$('#battleEnemyWrap').className='battle-sprite-wrap'}
-  function updateBattleHp(side,value,max){$(`#battle${side}Hp`).textContent=Math.max(0,Math.floor(value));$(`#battle${side}Bar`).style.width=`${Math.max(0,Math.min(100,value/max*100))}%`}
+  function updateBattleHp(side,value,max){if(side==='Enemy'&&!state.hasMirror){$(`#battle${side}Hp`).textContent='?';$(`#battle${side}Bar`).style.width='100%';return}$(`#battle${side}Hp`).textContent=Math.max(0,Math.floor(value));$(`#battle${side}Bar`).style.width=`${Math.max(0,Math.min(100,value/max*100))}%`}
   function appendBattleLog(title,text,type){const line=document.createElement('div');line.className=`battle-log-line ${type}`;line.innerHTML=`<b>${title}</b><span>${text}</span>`;$('#battleLog').appendChild(line);$('#battleLog').scrollTop=$('#battleLog').scrollHeight}
   function showDamage(selector,value){const n=$(selector);n.textContent=typeof value==='number'?`-${value}`:value;n.classList.remove('pop');void n.offsetWidth;n.classList.add('pop')}
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
   function collect(e){
     const scale=1+Math.floor(state.floor/12);
-    if(e.item==='potion'){const gain=120*scale;state.hp+=gain;state.maxHp=Math.max(state.maxHp,state.hp);showGainEffect('peach','大蟠桃',`气血 +${gain}`);addLog('仙果',`蟠桃恢复 ${gain} 气血。`,'good')}
-    else if(e.item==='gemAtk'){const gain=7+Math.floor(state.floor/18)*2;state.atk+=gain;showGainEffect('attack','攻击提升',`攻击 +${gain}`);addLog('法宝',`攻击提升 ${gain}。`,'good')}
-    else if(e.item==='gemDef'){const gain=6+Math.floor(state.floor/18)*2;state.def+=gain;showGainEffect('defense','防御提升',`防御 +${gain}`);addLog('法宝',`防御提升 ${gain}。`,'good')}
+    if(e.item==='mirror'){state.hasMirror=true;showGainEffect('mirror','照妖镜',`妖鉴已能洞察气血、攻击与防御`,'demon-mirror');addLog('神器','获得照妖镜，妖怪真形无所遁藏。','good')}
+    else if(e.item==='bossRelic'){const reward=e.reward||{};state.atk+=reward.atk||0;state.def+=reward.def||0;state.maxHp+=reward.hp||0;state.hp+=reward.hp||0;showGainEffect('relic',e.name,`攻击 +${reward.atk||0}　防御 +${reward.def||0}　气血 +${reward.hp||0}`,e.art);addLog('劫主法宝',`收服${e.name}，攻防与气血大幅提升。`,'good')}
+    else if(e.item==='potion'){const gain=120*scale;state.hp+=gain;state.maxHp=Math.max(state.maxHp,state.hp);showGainEffect('peach','大蟠桃',`气血 +${gain}`,'peach');addLog('仙果',`蟠桃恢复 ${gain} 气血。`,'good')}
+    else if(e.item==='gemAtk'){const gain=7+Math.floor(state.floor/18)*2;state.atk+=gain;showGainEffect('attack',e.name,`攻击 +${gain}`,e.art);addLog('法宝',`${e.name}令攻击提升 ${gain}。`,'good')}
+    else if(e.item==='gemDef'){const gain=6+Math.floor(state.floor/18)*2;state.def+=gain;showGainEffect('defense',e.name,`防御 +${gain}`,e.art);addLog('法宝',`${e.name}令防御提升 ${gain}。`,'good')}
     else{state.keys[e.item]++;addLog('拾取',`获得一把${doorName(e.item)}钥匙。`,'good');showKeyNotice(e.item)}
   }
 
@@ -359,20 +387,21 @@
 
   function openShop(){
     const atkCost=30+Math.floor(state.floor/10)*8,defCost=30+Math.floor(state.floor/10)*8,hpCost=22+Math.floor(state.floor/10)*6;
-    showModal(`<h2>土地庙</h2><p>土地公捻须道：功德可换些仙缘，但切莫贪多。</p><div class="modal-actions"><button class="pixel-btn" data-buy="atk" data-cost="${atkCost}">攻击 +12<br><small>${atkCost} 功德</small></button><button class="pixel-btn" data-buy="def" data-cost="${defCost}">防御 +10<br><small>${defCost} 功德</small></button><button class="pixel-btn" data-buy="hp" data-cost="${hpCost}">气血 +500<br><small>${hpCost} 功德</small></button></div>`);
+    showModal(`<div class="shop-heading"><span class="ui-art npc-art shop-portrait" style="--ui-art:url('${npcArt('landgod')}')"></span><div><h2>土地庙</h2><p>土地公捻须道：功德可换些仙缘，但切莫贪多。</p></div></div><div class="modal-actions shop-offers"><button class="pixel-btn" data-buy="atk" data-cost="${atkCost}"><i class="shop-offer-art" style="--offer-art:url('${itemArt('three-point-blade')}')"></i>攻击 +12<br><small>${atkCost} 功德</small></button><button class="pixel-btn" data-buy="def" data-cost="${defCost}"><i class="shop-offer-art" style="--offer-art:url('${itemArt('dragon-shield')}')"></i>防御 +10<br><small>${defCost} 功德</small></button><button class="pixel-btn" data-buy="hp" data-cost="${hpCost}"><i class="shop-offer-art" style="--offer-art:url('${itemArt('peach')}')"></i>气血 +500<br><small>${hpCost} 功德</small></button></div>`);
     ui.modalContent.querySelectorAll('[data-buy]').forEach(btn=>btn.onclick=()=>{const cost=+btn.dataset.cost;if(state.coin<cost){toast('功德不足');return}state.coin-=cost;if(btn.dataset.buy==='atk')state.atk+=12;if(btn.dataset.buy==='def')state.def+=10;if(btn.dataset.buy==='hp'){state.hp+=500;state.maxHp+=500}addLog('土地庙','以功德换得一份仙缘。','good');closeModal();render()});
   }
 
   function showBestiary(){
     const enemies=generateFloor(state.floor).entities.filter(e=>e.type==='enemy');
-    const rows=enemies.length?enemies.map(e=>{const hit=state.atk-e.def,rounds=hit>0?Math.ceil(e.hp/hit):Infinity,loss=hit>0?Math.max(0,(rounds-1)*Math.max(0,e.atk-state.def)):Infinity;return `<div class="monster-row"><span class="mini-enemy game-sprite" style="--sprite:url('assets/sprites/${e.sprite}.png')"></span><div><b>${e.name}</b><small>${e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.vaultGuard?'藏宝室守卫':'拦路妖怪'}</small></div><span><small>气血</small>${e.hp}</span><span><small>攻/防</small>${e.atk}/${e.def}</span><span><small>功德</small>${e.coin}</span><span class="loss"><small>预计损伤</small>${Number.isFinite(loss)?loss:'不可破防'}</span></div>`}).join(''):'<p>本层妖气已清。</p>';
+    if(!state.hasMirror){const rows=enemies.length?enemies.map(e=>`<div class="monster-row obscured"><span class="mini-enemy game-sprite" style="--sprite:url('assets/sprites/${e.sprite}.png')"></span><div><b>${e.name}</b><small>${e.elite?'远古劫主':e.boss?'本层劫主':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪'}</small></div><span class="mirror-unknown">妖气遮蔽</span></div>`).join(''):'<p>本层妖气已清。</p>';showModal(`<h2>本层妖鉴</h2><div class="mirror-lock"><span class="ui-art item-art" style="--ui-art:url('${itemArt('demon-mirror')}')"></span><p>尚未取得照妖镜，只能辨认妖怪名号。照妖镜藏在第三难。</p></div>${rows}`);return}
+    const rows=enemies.length?enemies.map(e=>{const hit=state.atk-e.def,rounds=hit>0?Math.ceil(e.hp/hit):Infinity,loss=hit>0?Math.max(0,(rounds-1)*Math.max(0,e.atk-state.def)):Infinity;return `<div class="monster-row"><span class="mini-enemy game-sprite" style="--sprite:url('assets/sprites/${e.sprite}.png')"></span><div><b>${e.name}</b><small>${e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪'}</small></div><span><small>气血</small>${e.hp}</span><span><small>攻/防</small>${e.atk}/${e.def}</span><span><small>功德</small>${e.coin}</span><span class="loss"><small>预计损伤</small>${Number.isFinite(loss)?loss:'不可破防'}</span></div>`}).join(''):'<p>本层妖气已清。</p>';
     showModal(`<h2>本层妖鉴</h2><p>战斗自动结算。你先出手；敌人每轮反击，最后一击后不会反击。</p>${rows}`);
   }
 
-  function showMenu(){showModal(`<h2>行者歇脚</h2><p>进度已自动保存在浏览器中。当前第 ${state.floor} 难，已行 ${state.steps} 步。</p><div class="modal-actions"><button class="pixel-btn" data-action="resume">继续游戏</button><button class="pixel-btn" data-action="save">手动存档</button><button class="pixel-btn" data-action="title">返回标题</button><button class="pixel-btn" data-action="restart">重开此世</button></div>`);ui.modalContent.querySelector('[data-action=resume]').onclick=closeModal;ui.modalContent.querySelector('[data-action=save]').onclick=()=>{save();toast('前缘已记入天命卷');closeModal()};ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden')};ui.modalContent.querySelector('[data-action=restart]').onclick=()=>{if(confirm('确定抹去当前进度，从第一难重新开始？'))startNew()}}
-  function showHelp(){showModal(`<h2>西行要诀</h2><p><b>移动：</b>使用 WASD、方向键或屏幕方向按钮。<br><b>战斗：</b>撞向妖怪会进入战斗场景，逐回合显示双方伤害、气血和最终奖励。攻击必须高于妖怪防御；预计损伤达到当前气血时只能暂且退避。<br><b>藏宝门：</b>每三层会出现一座封闭藏宝室。钥匙必在门外，开门后仍需面对守卫才能取得秘宝。<br><b>探索：</b>留意地砖上极细的裂纹，也不要错过紫色星光。前者可能藏有宝物，后者会触发有选择的奇遇。<br><b>成长：</b>拾取宝石、蟠桃和钥匙，或在土地庙用功德换取能力。<br><b>目标：</b>逐层登塔，经历八十一难。猪八戒、沙悟净、小白龙与太白金星会在少数难关略施援手。<br><b>存档：</b>每一步都会自动保存。</p>`)}
+  function showMenu(){showModal(`<h2>行者歇脚</h2><p>进度已自动保存在浏览器中。当前第 ${state.floor} 难，已行 ${state.steps} 步。</p><div class="modal-actions"><button class="pixel-btn" data-action="resume">继续游戏</button><button class="pixel-btn" data-action="save">手动存档</button><button class="pixel-btn" data-action="title">返回标题</button><button class="pixel-btn" data-action="restart">重开此世</button></div>`);ui.modalContent.querySelector('[data-action=resume]').onclick=closeModal;ui.modalContent.querySelector('[data-action=save]').onclick=()=>{save();toast('前缘已记入天命卷');closeModal()};ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden');pauseBgm()};ui.modalContent.querySelector('[data-action=restart]').onclick=()=>{if(confirm('确定抹去当前进度，从第一难重新开始？'))startNew()}}
+  function showHelp(){showModal(`<h2>西行要诀</h2><p><b>移动：</b>使用 WASD、方向键或屏幕方向按钮。<br><b>照妖镜：</b>未取得前，妖鉴只能显示妖怪名称，战斗中也看不到敌方攻防和气血条。照妖镜藏在第三难。<br><b>战斗：</b>撞向妖怪会进入战斗场景。攻击必须高于妖怪防御；无法取胜时只能暂且退避。<br><b>劫主：</b>章节Boss由亲卫守护，身边法宝受妖气封印。击败Boss可获得更高属性奖励，并解除专属法宝封印。<br><b>路线：</b>每层由主路线、支路和少量回路组成。封印门位于关键通道，先探索门前区域、取得同色钥匙，再决定是否绕路取宝。<br><b>藏宝门：</b>每三层会出现一座可选藏宝室。钥匙必在门外，开门后仍需面对守卫才能取得秘宝。<br><b>探索：</b>留意地砖上极细的裂纹，也不要错过紫色星光。前者可能藏有宝物，后者会触发有选择的奇遇。<br><b>成长：</b>拾取法宝、蟠桃和钥匙，或在土地庙用功德换取能力。<br><b>存档：</b>每一步都会自动保存。</p>`)}
 
-  function winGame(){state.won=true;save();sound('win');const minutes=Math.max(1,Math.floor((Date.now()-state.startedAt)/60000));showModal(`<div class="ending-art"></div><h2>八十一难 · 功德圆满</h2><p>金箍棒停在佛掌之前。悟空终于明白，最后一战并非弑佛，而是打破心中最后的执念。如来让开雷音寺门，唐僧重获自由，师徒再踏归途。</p><p>通关记录：${state.steps} 步 · ${minutes} 分钟 · 剩余气血 ${Math.floor(state.hp)}</p><div class="modal-actions"><button class="pixel-btn primary" data-action="again">再历一世</button><button class="pixel-btn" data-action="title">返回标题</button></div>`);ui.modalContent.querySelector('[data-action=again]').onclick=startNew;ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden')}}
+  function winGame(){state.won=true;save();sound('win');const minutes=Math.max(1,Math.floor((Date.now()-state.startedAt)/60000));showModal(`<div class="ending-art"></div><h2>八十一难 · 功德圆满</h2><p>金箍棒停在佛掌之前。悟空终于明白，最后一战并非弑佛，而是打破心中最后的执念。如来让开雷音寺门，唐僧重获自由，师徒再踏归途。</p><p>通关记录：${state.steps} 步 · ${minutes} 分钟 · 剩余气血 ${Math.floor(state.hp)}</p><div class="modal-actions"><button class="pixel-btn primary" data-action="again">再历一世</button><button class="pixel-btn" data-action="title">返回标题</button></div>`);ui.modalContent.querySelector('[data-action=again]').onclick=startNew;ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden');pauseBgm()}}
 
   function updateCompanions(){document.querySelectorAll('.companion').forEach(n=>{const active=state.companions.includes(n.dataset.id);n.classList.toggle('locked',!active);if(active)n.querySelector('small').textContent='已结缘 · 偶尔相助'})}
   function addLog(title,text,type=''){state.log.unshift({title,text,type});state.log=state.log.slice(0,20)}
@@ -380,12 +409,13 @@
   function doorName(k){return{yellow:'黄',blue:'蓝',red:'红'}[k]}
   function showKeyNotice(kind){
     clearTimeout(keyNoticeTimer);const notice=$('#keyNotice');notice.className=`key-notice ${kind}`;
+    $('.big-key').style.setProperty('--key-art',`url("${itemArt(`key-${kind}`)}")`);
     $('#keyNoticeName').textContent=`${doorName(kind)}钥匙`;$('#keyNoticeCount').textContent=state.keys[kind];
     void notice.offsetWidth;notice.classList.add('show');keyNoticeTimer=setTimeout(()=>{notice.classList.remove('show');setTimeout(()=>notice.classList.add('hidden'),260)},2100);
   }
-  function showGainEffect(kind,title,detail){
+  function showGainEffect(kind,title,detail,art){
     clearTimeout(effectTimer);const effect=$('#itemEffect');effect.className=`item-effect ${kind}`;
-    const icon=$('#effectIcon');icon.innerHTML=kind==='peach'?'<i class="peach-fruit large"><b></b></i>':kind==='attack'?'⚔':kind==='defense'?'◆':'悟';
+    const icon=$('#effectIcon');icon.innerHTML='';icon.style.setProperty('--effect-art',`url("${itemArt(art||(kind==='level'?'kasaya':'peach'))}")`);
     $('#effectTitle').textContent=title;$('#effectDetail').textContent=detail;void effect.offsetWidth;effect.classList.add('show');
     effectTimer=setTimeout(()=>{effect.classList.remove('show');setTimeout(()=>effect.classList.add('hidden'),220)},1500);
   }
@@ -394,16 +424,22 @@
   function closeModal(){ui.modal.classList.add('hidden')}
   function save(){if(state)localStorage.setItem(SAVE_KEY,JSON.stringify(state));$('#continueBtn').disabled=!localStorage.getItem(SAVE_KEY)}
   function load(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch{return null}}
-  function enterGame(){ui.title.classList.add('hidden');ui.game.classList.remove('hidden');closeModal();$('#battleScene').classList.add('hidden');$('#itemEffect').classList.add('hidden');$('#floorTransition').classList.add('hidden');busy=false;render()}
-  function startNew(){state=freshState();state.log=[{title:'启程',text:'悟空闯入八十一难塔，誓要救回唐僧。',type:'good'}];enterGame()}
-  function continueGame(){state=load();if(!state){startNew();return}enterGame()}
+  function enterGame(){ui.title.classList.add('hidden');ui.game.classList.remove('hidden');closeModal();$('#battleScene').classList.add('hidden');$('#itemEffect').classList.add('hidden');$('#floorTransition').classList.add('hidden');busy=false;render();syncBgm()}
+  function startNew(){state=freshState();state.log=[{title:'启程',text:'悟空闯入八十一难塔，誓要救回唐僧。',type:'good'}];const bgm=$('#bgm');bgm.currentTime=0;bgmStarted=false;enterGame()}
+  function continueGame(){state=load();if(!state){startNew();return}if(typeof state.hasMirror!=='boolean')state.hasMirror=false;enterGame()}
 
   let audioCtx;
+  function syncBgm(){
+    const bgm=$('#bgm');bgm.volume=.24;
+    if(audioOn&&!ui.game.classList.contains('hidden')){const playback=bgm.play();if(playback)playback.then(()=>{bgmStarted=true;$('#soundBtn').classList.remove('needs-gesture');$('#soundBtn').setAttribute('aria-label','切换声音')}).catch(()=>{bgmStarted=false;$('#soundBtn').classList.add('needs-gesture');$('#soundBtn').setAttribute('aria-label','点击开启背景音乐')})}
+    else bgm.pause();
+  }
+  function pauseBgm(){const bgm=$('#bgm');if(!bgm.paused)bgm.pause()}
   function sound(type){if(!audioOn)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();const freq={step:130,bump:80,item:620,door:210,stairs:440,battle:95,helper:520,win:740}[type]||220;o.type=type==='battle'?'sawtooth':'square';o.frequency.setValueAtTime(freq,audioCtx.currentTime);if(type==='win')o.frequency.exponentialRampToValueAtTime(1180,audioCtx.currentTime+.35);g.gain.setValueAtTime(.035,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+(type==='win'?.5:.09));o.connect(g).connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+(type==='win'?.5:.1))}catch{}}
 
   $('#newGameBtn').onclick=startNew;$('#continueBtn').onclick=continueGame;$('#continueBtn').disabled=!localStorage.getItem(SAVE_KEY);
   $('#bestiaryBtn').onclick=showBestiary;$('#menuBtn').onclick=showMenu;$('#helpBtn').onclick=showHelp;
-  $('#soundBtn').onclick=e=>{audioOn=!audioOn;e.currentTarget.textContent=audioOn?'♪':'×';toast(audioOn?'声音已开启':'声音已关闭')};
+  $('#soundBtn').onclick=e=>{if(audioOn&&e.currentTarget.classList.contains('needs-gesture')){syncBgm();toast('正在开启背景音乐');return}audioOn=!audioOn;e.currentTarget.textContent=audioOn?'♪':'×';syncBgm();toast(audioOn?'背景音乐与音效已开启':'声音已关闭')};
   $('#clearLogBtn').onclick=()=>{state.log=[];renderLog()};
   document.querySelectorAll('[data-close-modal]').forEach(n=>n.onclick=closeModal);
   document.querySelectorAll('.mobile-controls button').forEach(n=>n.onclick=()=>{const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[n.dataset.dir];move(...d)});
