@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#090d18" />
   <title>八十一难 · 西游魔塔</title>
   <link rel="preload" as="image" href="assets/journey-tower-keyart.png" />
-  <link rel="stylesheet" href="styles.css?v=1.3.0" />
+  <link rel="stylesheet" href="styles.css?v=2.1.0" />
 </head>
 <body>
   <main id="app">
@@ -19,6 +19,7 @@
         <div class="title-actions">
           <button id="newGameBtn" class="pixel-btn primary">开始闯塔</button>
           <button id="continueBtn" class="pixel-btn">继续前缘</button>
+          <button id="debugGameBtn" class="pixel-btn debug-launch">DEBUG 验关</button>
         </div>
         <div class="key-hint"><kbd>WASD</kbd> / <kbd>方向键</kbd> 移动　<kbd>E</kbd> 交互　<kbd>Esc</kbd> 菜单</div>
       </div>
@@ -38,6 +39,7 @@
         <div class="brand"><span class="brand-seal">难</span><div><small>JOURNEY TOWER</small><strong>八十一难</strong></div></div>
         <div class="chapter-title"><small id="chapterKicker">第一难域</small><strong id="chapterName">双叉岭</strong></div>
         <div class="top-actions">
+          <button class="debug-jump hidden" id="debugJumpBtn">DEBUG · 跳关</button>
           <button class="icon-btn" id="soundBtn" aria-label="切换声音">♪</button>
           <button class="icon-btn" id="helpBtn" aria-label="查看帮助">?</button>
           <button class="icon-btn" id="menuBtn" aria-label="打开菜单">☰</button>
@@ -66,6 +68,8 @@
           </div>
           <div class="inventory-title artifact-title"><span>法宝栏</span><i></i><b id="artifactCount">0</b></div>
           <div id="artifactBar" class="artifact-bar" aria-label="已获得法宝"></div>
+          <div class="inventory-title skill-title"><span>大圣神通</span><i></i><b id="skillCount">0</b></div>
+          <div id="skillBar" class="skill-bar" aria-label="已习得神通"></div>
           <button id="bestiaryBtn" class="panel-action">妖鉴 <span>查看本层敌情</span></button>
         </aside>
 
@@ -129,7 +133,7 @@
           <div class="battle-hp"><span><b id="battleHeroHp">0</b> / <em id="battleHeroMax">0</em></span><div><i id="battleHeroBar"></i></div></div>
           <div class="battle-stats" id="battleHeroStats"></div>
         </section>
-        <div class="battle-vs"><b>战</b><span>VS</span></div>
+        <div class="battle-vs"><b><i aria-hidden="true">战</i></b><span>VS</span></div>
         <section class="battle-fighter enemy-side">
           <div class="battle-name"><small id="battleEnemyType">拦路妖怪</small><strong id="battleEnemyName">妖怪</strong></div>
           <div class="battle-sprite-wrap" id="battleEnemyWrap">
@@ -171,7 +175,7 @@
   </div>
 
   <div id="toast" class="toast" aria-live="assertive"></div>
-  <audio id="bgm" src="assets/audio/journey-tower-bgm.wav" preload="auto" loop></audio>
-  <script src="game.js?v=1.3.0"></script>
+  <script src="audio.js?v=2.1.0"></script>
+  <script src="game.js?v=2.1.0"></script>
 </body>
 </html>
