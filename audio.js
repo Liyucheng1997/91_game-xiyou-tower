@@ -13,6 +13,9 @@ window.JourneyAudio = (() => {
   let current = null;        // 当前主题 key
   let theme = null;
   let musicTarget = 0.2, ducked = 1;
+  const BATTLE_HIT_SRC = 'assets/audio/Sword%20Hit%201%20-%20QuickSounds.com.mp3';
+  const battleHitPool = [];
+  let battleHitIndex = 0;
   const LOOKAHEAD = 0.12, INTERVAL = 25;
   const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
   const rand = () => Math.random();
@@ -71,6 +74,21 @@ window.JourneyAudio = (() => {
     osc.frequency.setValueAtTime(f0, t); osc.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.6);
     amp.gain.setValueAtTime(g, t); amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     osc.start(t); osc.stop(t + dur + 0.02);
+  }
+  function ensureBattleHitPool() {
+    if (battleHitPool.length) return;
+    for (let i = 0; i < 4; i++) {
+      const sample = new Audio(BATTLE_HIT_SRC);
+      sample.preload = 'auto'; sample.volume = 0.78;
+      battleHitPool.push(sample);
+    }
+  }
+  function playBattleHit() {
+    ensureBattleHitPool();
+    const sample = battleHitPool[battleHitIndex++ % battleHitPool.length];
+    sample.pause(); sample.currentTime = 0;
+    const playback = sample.play();
+    if (playback?.catch) playback.catch(() => {});
   }
 
   // ---------- 九域主题 ----------
@@ -193,11 +211,11 @@ window.JourneyAudio = (() => {
     }, 360);
   }
   function playTitle() { setRegion(-1); }
-  function resume() { ensureCtx(); if (ctx.state === 'suspended') ctx.resume(); }
+  function resume() { ensureCtx(); ensureBattleHitPool(); if (ctx.state === 'suspended') ctx.resume(); }
   function stop() { stopScheduler(); theme = null; current = null; if (musicBus) musicBus.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); }
   function setEnabled(on) {
     enabled = on;
-    if (!on) { if (ctx) musicBus && musicBus.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); }
+    if (!on) { battleHitPool.forEach(sample => { sample.pause(); sample.currentTime = 0; }); if (ctx) musicBus && musicBus.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); }
     else { resume(); if (theme) startScheduler(); applyMusicGain(); }
   }
   function duck(on) { ducked = on ? 0.45 : 1; if (ctx) applyMusicGain(); }
@@ -209,13 +227,7 @@ window.JourneyAudio = (() => {
     switch (name) {
       case 'step': tone(t, 150, 0.06, { type: 'sine', gain: 0.06, bus: B }); break;
       case 'bump': tone(t, 84, 0.12, { type: 'square', gain: 0.12, cutoff: 400, bus: B }); noiseBurst(t, 0.06, { gain: 0.05, cutoff: 600, bus: B }); break;
-      case 'battle': { // 金箍棒重击：低频砸击体 + 金属铿锵分音 + 破空脆响
-        kick(t, { freq: 260, freq2: 58, gain: 0.6, dur: 0.26, bus: B });                       // 冲击体（棒身砸落）
-        [1.0, 1.79, 2.67, 3.94].forEach((m, i) => tone(t, 360 * m, 0.18 - i * 0.02,            // 不谐和金属铿锵
-          { type: 'triangle', gain: 0.16 * Math.pow(0.62, i), attack: 0.001, release: 0.14, bus: B }));
-        noiseBurst(t, 0.08, { gain: 0.22, cutoff: 2600, q: 1.0, filterType: 'bandpass', bus: B }); // 撞击噪声
-        noiseBurst(t, 0.022, { gain: 0.2, cutoff: 6500, filterType: 'highpass', bus: B });         // 破空脆响
-        break; }
+      case 'battle': playBattleHit(); break;
       case 'enemyHit': noiseBurst(t, 0.12, { gain: 0.16, cutoff: 1400, bus: B }); tone(t, 110, 0.14, { type: 'square', gain: 0.12, cutoff: 800, bus: B }); break;
       case 'door': noiseBurst(t, 0.5, { gain: 0.12, cutoff: 700, filterType: 'lowpass', bus: B }); tone(t, 70, 0.5, { type: 'sawtooth', gain: 0.07, cutoff: 300, bus: B }); break;
       case 'stairs': case 'cloud': { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';

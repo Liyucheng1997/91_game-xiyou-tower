@@ -127,6 +127,11 @@
   const npcArt = id => `assets/npcs/${id}.png`;
   const itemArt = id => `assets/items/${id}.png`;
   const itemAsset = e => ({yellow:'key-yellow',blue:'key-blue',red:'key-red',potion:'peach'}[e.item]||e.art);
+  const sixEarBoss = {
+    sprite:'sixear',name:'六耳猕猴',icon:'耳',hp:13800,atk:875,def:455,coin:888,color:'#6c426f',boss:true,hiddenBoss:true,
+    intro:'你打不过我，因为我就是你不肯承认的那一半。你有的记忆、神通和不甘，我一样不少。',
+    defeat:'六耳伏地，黑甲化作飞灰。原来所谓二心，从来不是另一个我——只是我不肯承认的自己。'
+  };
   const ui = {
     title:$('#titleScreen'), game:$('#gameScreen'), board:$('#board'), modal:$('#modal'), modalContent:$('#modalContent'),
     toast:$('#toast'), log:$('#eventLog'), oracle:$('#oracleText')
@@ -140,12 +145,12 @@
 
   function freshState(){
     return {floor:1,pos:{x:1,y:9},hp:1000,maxHp:1000,atk:24,def:10,coin:0,level:1,exp:0,
-      keys:{yellow:0,blue:0,red:0},removed:{},companions:[],artifacts:{},skills:{},visitedFloors:[1],hasMirror:false,steps:0,flags:{shards:0},startedAt:Date.now(),log:[],won:false};
+      keys:{yellow:0,blue:0,red:0},removed:{},companions:[],artifacts:{},skills:{},visitedFloors:[1],hasMirror:false,steps:0,flags:{shards:0,revealed:false,shaRedeemed:false,lionCamelSeen:false,sixEarDefeated:false},startedAt:Date.now(),log:[],won:false};
   }
 
   function freshDebugState(floor=1){
     const next=freshState();return{...next,floor,pos:{x:1,y:9},hp:99999,maxHp:99999,atk:9999,def:9999,coin:9999,level:81,
-      keys:{yellow:99,blue:99,red:99},skills:{'somersault-cloud':{id:'somersault-cloud'},'fiery-eyes':{id:'fiery-eyes'},'rescue-hair':{id:'rescue-hair',charges:3}},visitedFloors:Array.from({length:TOTAL_FLOORS},(_,i)=>i+1),hasMirror:true,debug:true,flags:{shards:3,revealed:true,shaRedeemed:true},log:[{title:'调试模式',text:`已传送至第 ${floor} 难；调试进度不会覆盖正式存档。`,type:'good'}]};
+      keys:{yellow:99,blue:99,red:99},skills:{'somersault-cloud':{id:'somersault-cloud'},'fiery-eyes':{id:'fiery-eyes'},'rescue-hair':{id:'rescue-hair',charges:3}},visitedFloors:Array.from({length:TOTAL_FLOORS},(_,i)=>i+1),hasMirror:true,debug:true,flags:{shards:3,revealed:true,shaRedeemed:true,lionCamelSeen:false,sixEarDefeated:false},log:[{title:'调试模式',text:`已传送至第 ${floor} 难；调试进度不会覆盖正式存档。`,type:'good'}]};
   }
 
   const expToNext=level=>20+level*8;
@@ -211,10 +216,12 @@
     ];
     const routeSet=new Set(originalRoute.map(([x,y])=>pointKey(x,y)));
     const makeBossChamber=()=>{const candidates=shuffle(floorCells().filter(([x,y])=>!routeSet.has(pointKey(x,y))&&!occupied.has(pointKey(x,y))));for(const spot of candidates){const open=floorNeighbors(...spot).filter(([x,y])=>!occupied.has(pointKey(x,y))),walls=shuffle(directions.map(([dx,dy])=>[spot[0]+dx,spot[1]+dy]).filter(([x,y])=>inside(x,y)&&grid[y][x]==='wall'));if(!open.length||open.length+walls.length<3)continue;while(open.length<3&&walls.length){const carved=walls.shift();grid[carved[1]][carved[0]]='floor';open.push(carved)}return{boss:spot,entry:open[0],guard:open[1],relic:open[2]}}return null};
+    const makeFinalCheckpoint=()=>{for(let i=originalRoute.length-3;i>=4;i--){const boss=originalRoute[i],entry=originalRoute[i-1];if(occupied.has(pointKey(...boss))||occupied.has(pointKey(...entry)))continue;const sides=directions.map(([dx,dy])=>[boss[0]+dx,boss[1]+dy]).filter(([x,y])=>inside(x,y)&&!routeSet.has(pointKey(x,y))&&!occupied.has(pointKey(x,y)));if(sides.length<2)continue;for(const [x,y] of sides.slice(0,2))grid[y][x]='floor';return{boss,entry,guard:sides[0],relic:sides[1]}}return makeBossChamber()};
+    const makePrisonerCorner=()=>{const corners=[[1,1],[9,1],[1,9],[9,9]],cornerDistance=([x,y])=>Math.min(...corners.map(([cx,cy])=>Math.abs(x-cx)+Math.abs(y-cy))),candidates=floorCells().filter(([x,y])=>!routeSet.has(pointKey(x,y))&&!occupied.has(pointKey(x,y))).sort((a,b)=>cornerDistance(a)-cornerDistance(b)||floorNeighbors(...a).length-floorNeighbors(...b).length);for(const prisoner of candidates){const guards=floorNeighbors(...prisoner).filter(([x,y])=>!routeSet.has(pointKey(x,y))&&!occupied.has(pointKey(x,y)));if(guards.length)return{prisoner,guard:guards[0]}}return null};
     const bossIndex=floor%9===0?floor/9-1:-1;
     if(bossIndex>=0){
       const relic={...bossRelicBook[bossIndex],reward:{atk:22+bossIndex*7,def:14+bossIndex*6,hp:650+bossIndex*320}};
-      const chamber=makeBossChamber();
+      const chamber=floor===81?makeFinalCheckpoint():makeBossChamber();
       if(chamber){
         const seal=`${floor}:${chamber.boss[0]}:${chamber.boss[1]}`;
         addFixed(...chamber.boss,'enemy',{...bosses[bossIndex],boss:true,bossChamber:true,relic});
@@ -223,6 +230,7 @@
         addFixed(...chamber.relic,'item',{item:'bossRelic',artifactId:relic.id,name:relic.name,art:relic.art,reward:relic.reward,sealedBy:seal});
       }
     }
+    if(floor===81){const prison=makePrisonerCorner();if(prison){addFixed(...prison.prisoner,'npc',{npc:'tangseng',name:'唐僧',text:'悟空，最后一难不在塔外，在你心中。',prisonerCorner:true});addFixed(...prison.guard,'enemy',{...enemyBook[tier],name:'护经天龙',prisonerGuard:true})}}
     const elite=eliteBosses[floor];
     if(elite){const eliteIndex=[4,11,17].indexOf(floor),eliteRelics=[{id:'chaos-armor',name:'混世玄甲',art:'dragon-shield'},{id:'giant-edge',name:'巨灵神锋',art:'three-point-blade'},{id:'nine-dragon-scale',name:'九首龙鳞',art:'kasaya'}],relic={...eliteRelics[eliteIndex],reward:{atk:14+eliteIndex*5,def:12+eliteIndex*4,hp:600+eliteIndex*260}},chamber=makeBossChamber();if(chamber){const seal=`${floor}:${chamber.boss[0]}:${chamber.boss[1]}`;addFixed(...chamber.boss,'enemy',{...elite,bossChamber:true,relic});addFixed(...chamber.entry,'enemy',{...enemyBook[Math.max(0,tier-1)],bossGuard:true});addFixed(...chamber.guard,'enemy',{...enemyBook[Math.max(0,tier-1)],bossGuard:true});addFixed(...chamber.relic,'item',{item:'bossRelic',artifactId:relic.id,name:relic.name,art:relic.art,reward:relic.reward,sealedBy:seal})}}
     if(floor===3){
@@ -244,7 +252,6 @@
     if(mentors[floor])place('npc',{...mentors[floor],npc:mentors[floor].id,mentor:true},1);
     if(helpers[floor])place('npc',{...helpers[floor],npc:helpers[floor].id},1);
     if(floor===41)place('item',{item:'skill',skillId:'fiery-eyes',art:'fiery-eyes',name:'八卦炉余火'},1);
-    if(floor===81)place('npc',{npc:'tangseng',name:'唐僧',text:'悟空，最后一难不在塔外，在你心中。'},1);
     if(floor%5===2)place('secret',{name:'可疑石板',secret:floor%3},1);
     if(floor%7===0)place('adventure',{name:'未知奇遇',adventure:Math.floor(floor/7)%adventures.length},1);
     if(vaultPlan){const kind=doorColors[(floor/3-1)%3];place('item',{item:kind,name:`${doorName(kind)}钥匙`,vaultKey:true},1);addFixed(...vaultPlan.door,'door',{door:kind,vault:true});addFixed(...vaultPlan.guard,'enemy',{...enemyBook[Math.min(enemyBook.length-1,tier)],vaultGuard:true});addFixed(...vaultPlan.reward,'item',floor%2?{item:'gemAtk',art:attackRelic,name:`秘藏·${attackRelic==='nine-tooth-rake'?'九齿钉耙':'三尖两刃刀'}`}:{item:'gemDef',art:defenseRelic,name:`秘藏·${defenseRelic==='kasaya'?'锦斓袈裟':'白龙鳞盾'}`})}
@@ -323,7 +330,7 @@
 
   function renderEntity(e){
     const n=document.createElement('span');n.className=`entity ${e.type}`;n.dataset.type=e.type;
-    if(e.type==='enemy'){n.classList.add('game-sprite');if(e.elite)n.classList.add('elite-boss');if(e.boss&&!e.elite)n.classList.add('boss-unit');if(e.bossGuard)n.classList.add('boss-guard');if(e.mirrorGuardian)n.classList.add('mirror-guardian');n.style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);n.title=state.hasMirror?`${e.name} HP${e.hp} 攻${e.atk} 防${e.def}`:e.name;n.setAttribute('aria-label',n.title)}
+    if(e.type==='enemy'){n.classList.add('game-sprite');if(e.elite)n.classList.add('elite-boss');if(e.boss&&!e.elite)n.classList.add('boss-unit');if(e.bossGuard||e.prisonerGuard)n.classList.add('boss-guard');if(e.mirrorGuardian)n.classList.add('mirror-guardian');n.style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);n.title=state.hasMirror?`${e.name} HP${e.hp} 攻${e.atk} 防${e.def}`:e.name;n.setAttribute('aria-label',n.title)}
     if(e.type==='item'){
       n.classList.add(`item-${e.item}`,'ui-art','item-art');n.title=e.name;if(e.vaultKey)n.dataset.vaultKey='true';
       n.style.setProperty('--ui-art',`url("${itemArt(itemAsset(e))}")`);n.setAttribute('aria-label',e.name);
@@ -353,14 +360,14 @@
     if(e.type==='door')return openDoor(e);
     if(e.type==='item'){if(e.sealedBy&&!state.removed[e.sealedBy]){toast(`${e.name}仍被劫主妖气封印`);sound('bump');return false}collect(e);markRemoved(e.x,e.y);return true}
     if(e.type==='stairs'){
-      if(e.direction==='up'&&state.floor===81){const finalAlive=generateFloor(81).entities.some(x=>x.type==='enemy');if(finalAlive){toast('如来仍守在雷音寺前');return false}winGame();return false}
+      if(e.direction==='up'&&state.floor===81){const finalAlive=generateFloor(81).entities.some(x=>x.final);if(finalAlive){toast('如来仍守在雷音寺前');return false}winGame();return false}
       startFloorTransition(e.direction);return false;
     }
     if(e.type==='npc'){
-      if(e.npc==='tangseng'){toast('师父就在眼前，先过最后心关。');return false}
+      if(e.npc==='tangseng'){const finalAlive=generateFloor(81).entities.some(x=>x.final);if(finalAlive)toast('师父就在眼前，击败如来便可渡过最后心关。');else winGame();return false}
       meetHelper(e);markRemoved(e.x,e.y);return true;
     }
-    if(e.type==='shop'){openShop();return false}
+    if(e.type==='shop'){openShop();return true}
     if(e.type==='secret'){discoverSecret(e);markRemoved(e.x,e.y);return true}
     if(e.type==='adventure'){openAdventure(e);return false}
     return true;
@@ -381,13 +388,14 @@
   function startFloorTransition(direction){
     const target=direction==='up'?Math.min(TOTAL_FLOORS,state.floor+1):Math.max(1,state.floor-1);
     if(target===state.floor)return;
+    const firstVisit=direction==='up'&&!state.visitedFloors?.includes(target);
     busy=true;const transition=$('#floorTransition');transition.className=`floor-transition ${direction} show`;
     $('#transitionLabel').textContent=direction==='up'?'登临下一难':'返回上一难';$('#transitionFloor').textContent=target;sound('stairs');
     setTimeout(()=>{
-      state.floor=target;state.pos=direction==='up'?{x:1,y:9}:{x:8,y:1};
-      const progress=direction==='up'?gainExperience(3+Math.ceil(state.floor/3)):{levels:0};
+      state.floor=target;state.pos=direction==='up'?{x:1,y:9}:{x:9,y:1};
+      const progress=firstVisit?gainExperience(3+Math.ceil(state.floor/3)):{levels:0};
       addLog(direction==='up'?'登塔':'回返',direction==='up'?`踏入第 ${state.floor} 难。`:`返回第 ${state.floor} 难。`,'good');render();
-      setTimeout(()=>{transition.className='floor-transition hidden';busy=false;if(progress.levels)showGainEffect('level','修为提升',`等级提升至 LV ${state.level}`)},480);
+      setTimeout(()=>{transition.className='floor-transition hidden';busy=false;if(progress.levels)showGainEffect('level','修为提升',`等级提升至 LV ${state.level}`);maybeShowFloorStory()},480);
     },420);
   }
 
@@ -437,7 +445,18 @@
 
   const artifactCount=id=>state.artifacts?.[id]?.count||0;
   const skillOwned=id=>!!state.skills?.[id];
+  const companionAidBook={
+    bajie:{name:'猪八戒',skill:'九齿钉耙',ratio:.12},
+    shaseng:{name:'沙悟净',skill:'降妖宝杖',ratio:.10},
+    bailong:{name:'小白龙',skill:'白龙吐息',ratio:.14}
+  };
   function getTightFilletBacklash(random=Math.random){return artifactCount('tight-fillet')&&random()<.22?Math.min(state.hp,Math.max(1,Math.floor(state.maxHp*.08))):0}
+  function getCompanionAid(e,random=Math.random){
+    const available=(state.companions||[]).filter(id=>companionAidBook[id]);
+    if(!available.length||random()>=.5)return null;
+    const id=available[Math.floor(random()*available.length)],aid=companionAidBook[id];
+    return{id,...aid,damage:Math.max(1,Math.floor(e.hp*aid.ratio))};
+  }
   function getBattleEffects(e){
     const blade=artifactCount('three-point-blade'),rake=artifactCount('nine-tooth-rake'),kasaya=artifactCount('kasaya'),shield=artifactCount('dragon-shield');
     const armorPierce=Math.min(.42,blade*.04+(artifactCount('golden-eye')?.12:0)+(skillOwned('fiery-eyes')?.06:0));
@@ -459,7 +478,9 @@
 
   async function runBattle(e){
     if(busy)return false;
-    const effects=getBattleEffects(e),{heroHit,enemyHit,openingDamage}=effects;
+    const effects=getBattleEffects(e),{heroHit,enemyHit}=effects,rolledAid=getCompanionAid(e);
+    const companionDamage=rolledAid?Math.min(rolledAid.damage,Math.max(0,e.hp-1-effects.openingDamage)):0;
+    const companionAid=companionDamage?{...rolledAid,damage:companionDamage}:null,openingDamage=effects.openingDamage+companionDamage;
     const victoryRounds=heroHit>0?Math.ceil(Math.max(1,e.hp-openingDamage)/heroHit):Infinity;
     const projectedLoss=Number.isFinite(victoryRounds)?Math.max(0,(victoryRounds-1)*enemyHit):Infinity;
     openBattleScene(e);
@@ -480,7 +501,8 @@
     const counterRounds=defeated?combatRounds:Math.max(0,combatRounds-1);
     const visualRounds=Math.min(combatRounds,6);
     let completed=0,shownHeroHp=startHeroHp,shownEnemyHp=e.hp-openingDamage;
-    if(state.hasMirror)appendBattleLog('照妖镜',`胜算已明：预计 ${victoryRounds} 回合取胜，损失 ${projectedLoss} 气血${artifactCount('tight-fillet')?'；紧箍反噬无法预知':''}。`,'artifact');
+    if(companionAid){appendBattleLog(`同伴·${companionAid.name}`,`${companionAid.skill}从旁助阵，直接削去 ${companionAid.damage} 气血。`,'companion');updateBattleHp('Enemy',e.hp-companionAid.damage,e.hp)}
+    if(state.hasMirror)appendBattleLog('照妖镜',`胜算已明：预计 ${victoryRounds} 回合取胜，损失 ${projectedLoss} 气血${companionAid?`；已计入${companionAid.name}助阵`:''}${artifactCount('tight-fillet')?'；紧箍反噬无法预知':''}。`,'artifact');
     if(backlashDamage){sound('backlash');$('#battleScene').classList.add('fillet-backlash');$('#battleHeroWrap').classList.add('hit');showDamage('#heroDamage',backlashDamage);updateBattleHp('Hero',shownHeroHp,state.maxHp);appendBattleLog('紧箍反噬',`咒音骤紧，悟空先损失 ${backlashDamage} 气血。`,'backlash');await wait(420);$('#battleHeroWrap').classList.remove('hit');$('#battleScene').classList.remove('fillet-backlash')}
     for(const trigger of effects.triggers){$('#battleScene').classList.add('artifact-skill');appendBattleLog(`法宝·${trigger.name}`,trigger.text,'artifact');if(trigger.damage){showDamage('#enemyDamage',trigger.damage);updateBattleHp('Enemy',shownEnemyHp,e.hp)}await wait(240);$('#battleScene').classList.remove('artifact-skill')}
     for(let i=0;i<visualRounds;i++){
@@ -513,21 +535,21 @@
     const xpGain=e.elite?60+state.floor*4:e.boss?18+state.floor*2:5+Math.ceil(state.floor/4);
     const loss=projectedLoss;
     state.hp=startHeroHp-loss;state.coin+=e.coin;state.atk+=atkGain;state.def+=defGain;state.maxHp+=hpGain;state.hp+=hpGain;state.keys.red+=redGain;
-    const progress=gainExperience(xpGain);markRemoved(e.x,e.y);
-    state.flags=state.flags||{shards:0};if(e.elite)state.flags.shards=(state.flags.shards||0)+1;if(e.flag)state.flags[e.flag]=true;
+    const progress=gainExperience(xpGain);if(!e.hiddenBoss)markRemoved(e.x,e.y);
+    state.flags=state.flags||{shards:0};if(e.elite)state.flags.shards=(state.flags.shards||0)+1;if(e.flag)state.flags[e.flag]=true;if(e.hiddenBoss)state.flags.sixEarDefeated=true;
     addLog('胜战',`击败${e.name}，战斗损失 ${loss}${backlashDamage?`，紧箍反噬 ${backlashDamage}`:''}，获得 ${e.coin} 功德。`,loss+backlashDamage>state.maxHp*.18?'danger':'good');save();
     if(e.defeat)appendBattleLog('战罢',e.defeat,'hero');
     sound(e.boss?'bossWin':'reward');
     $('#battleKicker').textContent=e.elite?'远古劫主已伏':e.boss?'大难已破':'战斗胜利';
     $('#battleReward').innerHTML=`<strong>胜利奖励</strong>${e.relic?`<div class="boss-relic-preview"><i style="--relic-art:url('${itemArt(e.relic.art)}')"></i><span>封印解除<br><b>${e.relic.name}</b>可拾取</span></div>`:''}<div><span>功德 <b>+${e.coin}</b></span><span>修为 <b>+${xpGain}</b></span><span>战斗损伤 <b>-${loss}</b></span>${backlashDamage?`<span class="loss">紧箍反噬 <b>-${backlashDamage}</b></span>`:''}${e.boss?`<span>攻击 <b>+${atkGain}</b></span><span>防御 <b>+${defGain}</b></span>`:''}${hpGain?`<span>气血上限 <b>+${hpGain}</b></span>`:''}${redGain?`<span>红钥匙 <b>+${redGain}</b></span>`:''}${progress.levels?`<span>等级 <b>+${progress.levels}</b></span>`:''}</div>`;
     $('#battleReward').classList.remove('hidden');
-    const done=$('#battleContinue');done.textContent=e.boss?'击破封印 · 收取法宝':'收下奖励';done.classList.remove('hidden');done.onclick=()=>{closeBattleScene();state.pos={x:e.x,y:e.y};state.steps++;busy=false;render();if(redGain)showKeyNotice('red');if(progress.levels)setTimeout(()=>showGainEffect('level','修为提升',`等级提升至 LV ${state.level}`),redGain?450:0);if(e.revelation&&!state.flags.revealed){state.flags.revealed=true;save();setTimeout(()=>showRevelation(e.revelation),redGain||progress.levels?900:400)}};
+    const done=$('#battleContinue');done.textContent=e.hiddenBoss?'收棒 · 直面本心':e.final?'渡过最后心关':e.boss?'击破封印 · 收取法宝':'收下奖励';done.classList.remove('hidden');done.onclick=()=>{closeBattleScene();state.pos={x:e.x,y:e.y};state.steps++;busy=false;render();if(e.hiddenBoss||e.final){winGame();return}if(redGain)showKeyNotice('red');if(progress.levels)setTimeout(()=>showGainEffect('level','修为提升',`等级提升至 LV ${state.level}`),redGain?450:0);if(e.revelation&&!state.flags.revealed){state.flags.revealed=true;save();setTimeout(()=>showRevelation(e.revelation),redGain||progress.levels?900:400)}};
     return false;
   }
 
   function openBattleScene(e){
-    $('#battleScene').className='battle-scene';$('#battleKicker').textContent=`第 ${state.floor} 难 · 遭遇战`;
-    $('#battleEnemyName').textContent=e.name;$('#battleEnemyType').textContent=e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.mirrorGuardian?'照妖镜守护者':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪';
+    $('#battleScene').className=`battle-scene${e.hiddenBoss?' hidden-boss':''}`;$('#battleKicker').textContent=e.hiddenBoss?'真心魔 · 二心之战':`第 ${state.floor} 难 · 遭遇战`;
+    $('#battleEnemyName').textContent=e.name;$('#battleEnemyType').textContent=e.hiddenBoss?'另一个齐天大圣':e.elite?'远古劫主 · 可绕行':e.boss?'本层劫主':e.mirrorGuardian?'照妖镜守护者':e.prisonerGuard?'护经守卫':e.bossGuard?'劫主亲卫':e.vaultGuard?'藏宝室守卫':'拦路妖怪';
     $('#battleEnemySprite').style.setProperty('--sprite',`url("assets/sprites/${e.sprite}.png")`);
     $('#battleHeroStats').textContent=`攻 ${state.atk}　防 ${state.def}`;$('#battleEnemyStats').textContent=`攻 ${e.atk}　防 ${e.def}`;
     $('#battleHeroMax').textContent=state.maxHp;$('#battleEnemyMax').textContent=e.hp;updateBattleHp('Hero',state.hp,state.maxHp);updateBattleHp('Enemy',e.hp,e.hp);
@@ -601,10 +623,35 @@
     ui.oracle.textContent=`${e.name}：${e.text}`;addLog('传法',`${e.name}传下「${rewardName}」。`,'good');sound('helper');showStoryReward(e.title,e.text,rewardId,rewardDetail,e.id);
   }
 
+  function showStoryScene({art,npc,eyebrow,title,body,button='继续',page='',onDone}){
+    const banner=art?`<div class="scene-art"><img src="assets/${art}" alt="" /></div>`:'';
+    const face=npc?`<span class="story-npc" style="--story-npc:url('${npcArt(npc)}')"></span>`:'';
+    showModal(`<div class="story-scene">${banner}${face}<small>${eyebrow||''}</small><h2>${title}</h2><p>${body}</p>${page?`<div class="scene-page">${page}</div>`:''}<button class="pixel-btn primary" data-scene-done>${button}</button></div>`);
+    ui.modalContent.querySelector('[data-scene-done]').onclick=()=>(onDone||closeModal)();
+  }
+  function showIntro(done){
+    const pages=[
+      {art:'journey-tower-keyart.png',eyebrow:'西游 · 八十一难',title:'取经路断',body:'大唐贞观年间，玄奘法师奉旨西行取经。一路降妖伏魔，九九八十一难，眼看只差抵达灵山雷音寺的最后一程。'},
+      {art:'journey-tower-keyart.png',eyebrow:'变故',title:'灵山倒悬',body:'就在雷音寺前，一股无名业障骤然卷起，掳走了唐僧。佛光尽灭，整座灵山轰然倒悬，化作一座深不见底的妖塔——八十一难，尽数封锁其中。'},
+      {art:'journey-tower-keyart.png',eyebrow:'你的使命',title:'独闯妖塔',body:'你是齐天大圣孙悟空。金箍棒在手，唯有逐层闯过这八十一难，才能救回师父。八戒、沙僧、白龙、太白只能在途中偶尔相助——这一程，终究要你自己走完。'}
+    ];
+    let i=0;
+    const step=()=>{const p=pages[i],last=i===pages.length-1;showStoryScene({art:p.art,eyebrow:p.eyebrow,title:p.title,body:p.body,button:last?'踏入第一难':'继续',page:`${i+1} / ${pages.length}`,onDone:()=>{if(last)done();else{i++;step()}}})};
+    step();
+  }
   function showRevelation(text){
     sound('reveal');
-    showModal(`<div class="story-reward"><span class="story-npc" style="--story-npc:url('${npcArt('taibai')}')"></span><small>塔中真言 · 道破天机</small><h2>原来这塔，是你自己</h2><p>“${text}”</p><button class="pixel-btn primary" data-story-done>怔在原地</button></div>`);
-    ui.modalContent.querySelector('[data-story-done]').onclick=closeModal;
+    showStoryScene({art:'midpoint-revelation.png',npc:'taibai',eyebrow:'塔中真言 · 道破天机',title:'原来这塔，是你自己',body:`“${text}”`,button:'怔在原地'});
+  }
+  function maybeShowFloorStory(){
+    state.flags=state.flags||{shards:0};
+    if(state.floor!==55||state.flags.lionCamelSeen)return;
+    state.flags.lionCamelSeen=true;save();sound('reveal');
+    showStoryScene({art:'lion-camel-despair.png',eyebrow:'第七难域 · 狮驼岭',title:'尸山遮断西行路',body:'狮驼国中不见炊烟，只见白骨堆成城墙。这里的妖魔并不只是拦路——它们要你相信，取经人走到这里，十个便会死十个。悟空第一次握紧金箍棒，却没有立刻说出那句“怕什么”。',button:'踏过尸山'});
+  }
+  function showSixEarEncounter(){
+    sound('reveal');
+    showStoryScene({art:'mind-demon-final.png',eyebrow:'三片残心 · 真相现形',title:'宝座上，是另一个你',body:'三片心魔残片同时发亮。如来的法相从中央裂开，一半仍是佛，一半却生出猴王的金瞳。阴影中，六耳猕猴提棒起身：“世人都说真假美猴王，可你我之间，从来没有真假——只有你敢不敢认。”',button:'直面二心',onDone:()=>{closeModal();runBattle({...sixEarBoss,x:state.pos.x,y:state.pos.y})}});
   }
   function showStoryReward(title,text,rewardId,rewardDetail='',npc=''){
     const skill=skillBook[rewardId],artifact=artifactBook[rewardId],item=skill||artifact,art=item?.art||rewardId;
@@ -645,13 +692,15 @@
   function showHelp(){showModal(`<h2>西行要诀</h2><p><b>移动：</b>使用 WASD、方向键或屏幕方向按钮。<br><b>大圣神通：</b>菩提、观音与八卦炉旧火会唤醒筋斗云、火眼金睛和救命毫毛。点击左侧神通图标查看或使用。<br><b>筋斗云：</b>只能返回本次西行已经到达过的关卡；移动端可从菜单使用。<br><b>紧箍咒：</b>永久提高攻击，但每场战斗有 22% 概率反噬 8% 最大气血，照妖镜无法预知。<br><b>照妖镜：</b>战斗中始终显示双方气血与攻防；未取得时妖鉴只能辨认名号，取得后会在妖鉴顶部显示并预估胜负。照妖镜不占法宝栏。<br><b>战斗：</b>无镜强攻可能战死；三根救命毫毛可自动替命并退战。<br><b>奇遇：</b>每个选择都会提前列出永久奖励，完成后还会显示本次实际所得。<br><b>DEBUG：</b>标题页可进入验关模式，通过顶部“DEBUG · 跳关”在 1—81 难间传送。调试进度不会覆盖正式存档。<br><b>存档：</b>正式模式每一步都会自动保存。</p>`)}
 
   function winGame(){
+    const shards=state.flags?.shards||0;
+    if(shards>=3&&!state.flags?.sixEarDefeated){showSixEarEncounter();return}
     state.won=true;save();sound('win');const minutes=Math.max(1,Math.floor((Date.now()-state.startedAt)/60000));
-    const shards=state.flags?.shards||0,hair=state.skills?.['rescue-hair'];
+    const hair=state.skills?.['rescue-hair'];
     let ending='zhan';
     if(shards>=3)ending='wu';
     else if(hair&&hair.charges===0&&shards===0)ending='mi';
     const endings={
-      wu:{title:'八十一难 · 心猿归真',body:'宝座上的「如来」缓缓回头，那张脸竟是你自己。你收住了金箍棒。三片心魔残片在掌心化作金光——你终于认出，这八十一难里的每一个妖魔，都是不肯放下的自己。塔轰然崩塌，灵山归位。唐僧就立在原处，从未离开：「悟空，你回来了。」'},
+      wu:{title:'八十一难 · 心猿归真',body:'六耳的身影散去，你终于收住了金箍棒。三片心魔残片在掌心化作金光——这八十一难里的每一个妖魔，都是不肯放下的自己。塔轰然崩塌，灵山归位。唐僧就立在原处，从未离开：「悟空，你回来了。」'},
       zhan:{title:'八十一难 · 功德圆满',body:'金箍棒重重砸下，「如来」的法相崩成漫天金屑。雷音寺门轰然洞开，唐僧重获自由，师徒再踏归途。只是夜深时，悟空偶尔还会想起塔顶那张脸——它笑得，竟和自己有几分像。'},
       mi:{title:'八十一难 · 心猿成魔',body:'三根救命毫毛早已耗尽，你是被一次次替命的金光，硬生生拖到了塔顶。当最后一棒落下，你忽然分不清自己究竟救了谁。塔没有崩，它只是换了个主人——下一个闯进来的人，会在妖魔的眼里，看见一只似曾相识的猴子。'}
     };
@@ -659,7 +708,7 @@
     showModal(`<div class="ending-art ${ending}"></div><h2>${data.title}</h2><p>${data.body}</p><p>通关记录：${state.steps} 步 · ${minutes} 分钟 · 剩余气血 ${Math.floor(state.hp)} · 心魔残片 ${shards}/3</p><div class="modal-actions"><button class="pixel-btn primary" data-action="again">再历一世</button><button class="pixel-btn" data-action="title">返回标题</button></div>`);
     ui.modalContent.querySelector('[data-action=again]').onclick=startNew;ui.modalContent.querySelector('[data-action=title]').onclick=()=>{closeModal();ui.game.classList.add('hidden');ui.title.classList.remove('hidden');pauseBgm();renderTrialCatalog()}}
 
-  function updateCompanions(){document.querySelectorAll('.companion').forEach(n=>{const active=state.companions.includes(n.dataset.id);n.classList.toggle('locked',!active);if(active)n.querySelector('small').textContent='已结缘 · 偶尔相助'})}
+  function updateCompanions(){document.querySelectorAll('.companion').forEach(n=>{const active=state.companions.includes(n.dataset.id);n.classList.toggle('locked',!active);if(active)n.querySelector('small').textContent='已结缘 · 50% 概率助阵'})}
   function renderArtifacts(){
     const root=$('#artifactBar');if(!root)return;state.artifacts=state.artifacts||{};
     const entries=Object.values(state.artifacts).filter(entry=>entry.count>0&&entry.id!=='demon-mirror');
@@ -702,10 +751,10 @@
   function closeModal(){ui.modal.classList.add('hidden')}
   function save(){if(state&&!state.debug)localStorage.setItem(SAVE_KEY,JSON.stringify(state));$('#continueBtn').disabled=!localStorage.getItem(SAVE_KEY)}
   function load(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch{return null}}
-  function enterGame(){ui.title.classList.add('hidden');ui.game.classList.remove('hidden');closeModal();$('#battleScene').classList.add('hidden');$('#itemEffect').classList.add('hidden');$('#floorTransition').classList.add('hidden');$('#debugJumpBtn').classList.toggle('hidden',!state.debug);busy=false;render();syncBgm()}
-  function startNew(){state=freshState();state.log=[{title:'启程',text:'悟空闯入八十一难塔，誓要救回唐僧。',type:'good'}];window.JourneyAudio?.stop();enterGame()}
+  function enterGame(){ui.title.classList.add('hidden');ui.game.classList.remove('hidden');closeModal();$('#battleScene').classList.add('hidden');$('#itemEffect').classList.add('hidden');$('#floorTransition').classList.add('hidden');$('#debugJumpBtn').classList.toggle('hidden',!state.debug);busy=false;render();syncBgm();setTimeout(maybeShowFloorStory,120)}
+  function startNew(){state=freshState();state.log=[{title:'启程',text:'悟空闯入八十一难塔，誓要救回唐僧。',type:'good'}];window.JourneyAudio?.resume();showIntro(()=>enterGame())}
   function startDebug(){state=freshDebugState(1);window.JourneyAudio?.stop();enterGame();showDebugPanel()}
-  function continueGame(){state=load();if(!state){startNew();return}if(typeof state.hasMirror!=='boolean')state.hasMirror=false;state.artifacts=state.artifacts||{};state.skills=state.skills||{};state.flags=state.flags||{shards:0};state.visitedFloors=state.visitedFloors||Array.from({length:Math.max(1,state.floor)},(_,i)=>i+1);delete state.artifacts['demon-mirror'];delete state.debug;enterGame()}
+  function continueGame(){state=load();if(!state){startNew();return}if(typeof state.hasMirror!=='boolean')state.hasMirror=false;state.artifacts=state.artifacts||{};state.skills=state.skills||{};state.flags={shards:0,revealed:false,shaRedeemed:false,lionCamelSeen:false,sixEarDefeated:false,...state.flags};state.visitedFloors=state.visitedFloors||Array.from({length:Math.max(1,state.floor)},(_,i)=>i+1);delete state.artifacts['demon-mirror'];delete state.debug;enterGame()}
 
   function syncBgm(){
     const A=window.JourneyAudio;if(!A)return;A.setEnabled(audioOn);

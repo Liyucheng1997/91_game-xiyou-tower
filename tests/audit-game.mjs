@@ -39,10 +39,10 @@ const floorTitleHelpers = Function(
   `${floorTitleSource}; return { getFloorTitle, getFloorMeta }`,
 )(chapters, bosses, eliteBosses, helpers, mentors, adventures, TOTAL_FLOORS, doorName);
 const { getFloorTitle, getFloorMeta } = floorTitleHelpers;
-const artifactState = { atk: 100, def: 30, hp: 1000, maxHp: 1000, artifacts: {}, skills: {} };
+const artifactState = { atk: 100, def: 30, hp: 1000, maxHp: 1000, artifacts: {}, skills: {}, companions: [] };
 const battleEffectSource = source.slice(source.indexOf('const artifactCount'), source.indexOf('\n  async function runBattle'));
-const battleHelpers = Function('state', `${battleEffectSource}; return { getBattleEffects, getTightFilletBacklash }`)(artifactState);
-const { getBattleEffects, getTightFilletBacklash } = battleHelpers;
+const battleHelpers = Function('state', `${battleEffectSource}; return { getBattleEffects, getTightFilletBacklash, getCompanionAid }`)(artifactState);
+const { getBattleEffects, getTightFilletBacklash, getCompanionAid } = battleHelpers;
 
 function reachable(data, start, blockedEntities = new Set()) {
   const blocked = new Set(data.entities.filter(entity => blockedEntities.has(entity.type)).map(entity => `${entity.x},${entity.y}`));
@@ -130,6 +130,9 @@ if (!html.includes('id="debugGameBtn"') || !html.includes('id="debugJumpBtn"')) 
 if (!source.includes('function freshDebugState') || !source.includes('function jumpDebug')) failures.push('DEBUG 模式不能任意跳关');
 if (!source.includes('state&&!state.debug')) failures.push('DEBUG 模式可能覆盖正式存档');
 if (!source.includes('function getAdventureRewards')) failures.push('奇遇奖励没有独立数值规则');
+if (!source.includes("if(e.type==='shop'){openShop();return true}")) failures.push('土地庙仍会作为不可穿越实体堵住路线');
+if (!source.includes('if(e.hiddenBoss||e.final){winGame();return}')) failures.push('击败如来后没有立即进入通关结算');
+if (source.includes("generateFloor(81).entities.some(x=>x.type==='enemy')")) failures.push('第 81 难仍要求清空所有杂兵才能通关');
 if (!source.includes('选择后立即获得永久奖励') || !source.includes('奇遇所得')) failures.push('奇遇选择或结算没有明确说明奖励');
 if (Object.keys(artifactBook).length < 17) failures.push(`法宝技能数量不足：${Object.keys(artifactBook).length}`);
 if (!artifactBook['tight-fillet'] || artifactBook['tight-fillet'].atk < 25) failures.push('紧箍没有提供足够的攻击收益');
@@ -151,12 +154,23 @@ const fieryEyeEffects = getBattleEffects(effectEnemy);
 if (fieryEyeEffects.effectiveDef >= artifactEffects.effectiveDef) failures.push('火眼金睛没有提供额外破甲');
 artifactState.artifacts['tight-fillet'] = {count:1};
 if (getTightFilletBacklash(() => 0) !== 80 || getTightFilletBacklash(() => 1) !== 0) failures.push('紧箍反噬概率或伤害不正确');
+artifactState.companions = ['bajie','shaseng','bailong'];
+const companionRolls = [.49,.99];
+const companionAid = getCompanionAid(effectEnemy, () => companionRolls.shift());
+if (companionAid?.id !== 'bailong' || companionAid.damage !== 140) failures.push('同伴助阵没有按 50% 概率从已结缘同伴中随机触发');
+if (getCompanionAid(effectEnemy, () => .5) !== null) failures.push('同伴助阵触发概率超过 50%');
+artifactState.companions = [];
+if (getCompanionAid(effectEnemy, () => 0) !== null) failures.push('未结缘时仍会触发同伴助阵');
 if (!source.includes("state.visitedFloors?.includes(target)") || !source.includes('function showCloudTravel')) failures.push('筋斗云没有限制为已走过关卡');
+if (!source.includes("const firstVisit=direction==='up'&&!state.visitedFloors?.includes(target)") || !source.includes('const progress=firstVisit?gainExperience')) failures.push('重复上楼仍可刷取修为');
+if (!source.includes("state.pos=direction==='up'?{x:1,y:9}:{x:9,y:1}")) failures.push('下楼落点没有与上楼梯重叠，可能落入随机墙体');
+if (!css.includes('.tile>.entity{grid-area:1/1}') || !css.includes('.entity.stairs{z-index:2;opacity:.58}') || !css.includes('.entity.player{z-index:5;opacity:1}')) failures.push('人物与楼梯没有按人物在前、楼梯在后叠加显示');
 if (!source.includes('function showRescueHairRevival') || !source.includes("hair.charges--")) failures.push('三根救命毫毛没有实现败亡替命');
 for (let r = 0; r < 9; r++) if (!new RegExp(`r${r}:\\s*T\\(`).test(audio)) failures.push(`音频引擎缺少第 ${r + 1} 域的独立 BGM 主题 r${r}`);
 if (!/title:\s*T\(/.test(audio)) failures.push('音频引擎缺少标题界面主题');
 for (const api of ['setRegion', 'playTitle', 'setEnabled', 'duck', 'sfx', 'resume', 'stop']) if (!new RegExp(`function ${api}\\b`).test(audio)) failures.push(`音频引擎缺少 ${api} 接口`);
 for (const fx of ['battle', 'reward', 'levelup', 'relic', 'heal', 'bossIntro', 'bossWin', 'backlash', 'rescue', 'reveal', 'win', 'death']) if (!new RegExp(`case '${fx}'`).test(audio)) failures.push(`音效缺少 ${fx} 分支`);
+if (!audio.includes('Sword%20Hit%201%20-%20QuickSounds.com.mp3') || !fs.existsSync(new URL('../assets/audio/Sword Hit 1 - QuickSounds.com.mp3', import.meta.url))) failures.push('金箍棒没有使用指定的金属打击采样');
 if (!source.includes("window.JourneyAudio?.setRegion(Math.floor((state.floor-1)/9))")) failures.push('游戏没有按域切换 BGM');
 if (!source.includes("window.JourneyAudio?.duck(true)")) failures.push('战斗时没有压低背景音乐');
 if (!source.includes("sound(e.boss?'bossWin':'reward')")) failures.push('胜利结算缺少奖励音效');
@@ -175,6 +189,13 @@ for (let floor = 1; floor <= TOTAL_FLOORS; floor++) {
   const data = generateFloor(floor);
   const entry = [1, 9];
   const up = data.entities.find(entity => entity.type === 'stairs' && entity.direction === 'up');
+  const down = data.entities.find(entity => entity.type === 'stairs' && entity.direction === 'down');
+  if (!up || up.x !== 9 || up.y !== 1) failures.push(`第 ${floor} 难上楼梯落点异常`);
+  if (floor > 1 && (!down || down.x !== 1 || down.y !== 9)) failures.push(`第 ${floor} 难下楼梯落点异常`);
+  for (const stair of [up, down].filter(Boolean)) {
+    const exits = [[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy]) => !['wall','water','lava'].includes(data.grid[stair.y+dy]?.[stair.x+dx])).length;
+    if (!exits) failures.push(`第 ${floor} 难${stair.direction==='up'?'上':'下'}楼梯没有可选离开方向`);
+  }
   const normalReach = reachable(data, entry);
   const progression = unlockReachable(data, entry);
   const innerWalls = data.grid.flat().filter(tile => tile === 'wall').length - 40;
@@ -192,6 +213,14 @@ for (let floor = 1; floor <= TOTAL_FLOORS; floor++) {
   const titleShop = data.entities.find(entity => entity.type === 'shop');
   const titleVault = data.entities.find(entity => entity.type === 'door' && entity.vault);
   const titleSecret = data.entities.find(entity => entity.type === 'secret');
+  if (floor === 81) {
+    const tangseng = data.entities.find(entity => entity.npc === 'tangseng');
+    const guards = tangseng ? data.entities.filter(entity => entity.prisonerGuard && Math.abs(entity.x-tangseng.x)+Math.abs(entity.y-tangseng.y)===1) : [];
+    if (!tangseng?.prisonerCorner) failures.push('第 81 难唐僧没有放入专用角落');
+    if (tangseng && data.mainRoute.some(([x,y]) => x===tangseng.x && y===tangseng.y)) failures.push('第 81 难唐僧仍在主路上挡路');
+    if (!guards.length) failures.push('第 81 难唐僧身边缺少护经妖怪');
+    if (tangseng && !reachable(data,entry,new Set(['npc'])).has(`${up.x},${up.y}`)) failures.push('第 81 难唐僧仍会阻断通关路线');
+  }
   floorTitles.push(floorTitle);
   if (!floorTitle?.trim()) failures.push(`第 ${floor} 难缺少关卡名称`);
   if (!/^[\p{Script=Han}]{5} · [\p{Script=Han}]{5}$/u.test(floorTitle)) failures.push(`第 ${floor} 难标题不是五字对句：${floorTitle}`);
@@ -232,8 +261,10 @@ for (let floor = 1; floor <= TOTAL_FLOORS; floor++) {
     if (guards.length < 2) failures.push(`第 ${floor} 难 Boss 身边守卫不足：${guards.length}`);
     if (!relics.length) failures.push(`第 ${floor} 难 Boss 身边没有封印法宝`);
     if (relics.some(relic => !relic.artifactId || !artifactBook[relic.artifactId])) failures.push(`第 ${floor} 难 Boss 法宝没有进入法宝图鉴`);
-    if (!boss.bossChamber) failures.push(`第 ${floor} 难 Boss 仍然摆在主路上`);
-    if (data.mainRoute.some(([x, y]) => x === boss.x && y === boss.y)) failures.push(`第 ${floor} 难 Boss 坐标实际位于主路线`);
+    if (!boss.bossChamber) failures.push(`第 ${floor} 难 Boss 缺少专用战斗区域`);
+    const bossOnMainRoute=data.mainRoute.some(([x,y])=>x===boss.x&&y===boss.y);
+    if (floor===81&&!bossOnMainRoute) failures.push('第 81 难如来没有正面镇守最终主路线');
+    if (floor!==81&&bossOnMainRoute) failures.push(`第 ${floor} 难 Boss 坐标实际位于主路线`);
     const minimum = boss.elite ? { atk: 7, def: 6, hp: 360 } : { atk: 14, def: 9, hp: 420 };
     if (relics.some(relic => !relic.reward || relic.reward.atk < minimum.atk || relic.reward.def < minimum.def || relic.reward.hp < minimum.hp)) failures.push(`第 ${floor} 难 Boss 法宝奖励过低`);
   }
